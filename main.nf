@@ -115,7 +115,7 @@ if (params.readPaths) {
     Channel
         .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
         .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-        .into { ch_read_files_fastqc; ch_read_files_trimming }
+        .into { ch_read_files_fastqc; ch_read_files_split }
 }
 
 // Header log info
@@ -195,6 +195,7 @@ process get_software_versions {
     """
 }
 
+
 /*
  * STEP 1 - FastQC
  */
@@ -219,7 +220,31 @@ process fastqc {
 }
 
 /*
- * STEP 2 - MultiQC
+ * STEP 2 - Demultiplex
+ */
+
+process demultiplex {
+
+  tag
+  label 'process_medium'
+
+  input:
+  tuple val(sample_id), file(reads) from ch_read_path
+
+  output:
+  tuple val(sample_id), file(*fastq) into demultiplexed
+  tuple val(sample_id), file(*counts), file(*hiCounts), file(summ) into demultiplex_lot
+
+  script:
+  """
+  splitFastqPair.pl ${sample_id}_R1.fastq ${sample_id}_R1.fastq
+  """
+ }
+
+process
+
+/*
+ * STEP 3 - MultiQC
  */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
