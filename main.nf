@@ -172,7 +172,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 
 /*
  * Parse software version numbers
- */
+
 process get_software_versions {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
@@ -195,10 +195,9 @@ process get_software_versions {
     """
 }
 
-
+*/
 /*
  * STEP 1 - FastQC
- */
 process fastqc {
     tag "$name"
     label 'process_medium'
@@ -219,31 +218,70 @@ process fastqc {
     """
 }
 
+
 /*
  * STEP 2 - Demultiplex
  */
 
+// ch_read_files_split = ch_read_files_split.dump(tag: "reads_ch")
+
 process demultiplex {
-  echo true
   tag  "${sample_id}-demultiplex"
-  label 'process_medium'
+  label "process_medium"
 
   input:
-  tuple val(sample_id), file(reads1), file(reads2) from ch_read_files_split
+     tuple val(sample_id), file(reads) from ch_read_files_split
 
   output:
-  tuple val(sample_id), file(*fastq) into demultiplexed
-  tuple val(sample_id), file(*counts), file(*hiCounts), file(summ) into demultiplex_lot
+     file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
 
   script:
+  fq1 = "${reads[0].baseName}"
+  fq2 = "${reads[1].baseName}"
   """
-  echo splitFastqPair.pl zcat $reads1  zcat $reads2
+  gzip -dc ${reads[0]} > $fq1 
+  gzip -dc ${reads[1]} > $fq2 
+  splitFastqPair.pl $fq1 $fq2 
   """
  }
 
+ch_demultiplex= ch_demultiplex.flatten()
+                              .map{file -> tuple(getSampleID(file), getIndex(file),file) }
+  		                      .groupTuple(by:[1,0])
+
+ def getIndex( file ){
+     // using RegEx to extract the SampleID
+     regexpPE = /.+_R[12].fastq.([ATGC]{6}).fastq/
+     (file =~ regexpPE)[0][1]
+ }
+ 
+ def getSampleID( file ){
+     // using RegEx to extract the SampleID
+     regexpPE = /.+\/([\w_\-]+)_R[12].fastq.[ATGC]{6}.fastq/
+     (file =~ regexpPE)[0][1]
+ }
+
+
+process bismark {
+   echo true
+   tag "${sample_id}-bismark"
+   label "process_medium"
+
+   input:
+     tuple val(sample_id), val(index), file(reads) from ch_demultiplex
+
+   script:
+   R1 = "${reads[0]}"
+   R2 = "${reads[1]}"
+   """
+   echo bismark --unmapped /scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/ -1 $R1 -2 $R2 --output_dir bismark_test
+   """
+   }
+
+
+
 /*
  * STEP 3 - MultiQC
- */
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
@@ -272,7 +310,6 @@ process multiqc {
 
 /*
  * STEP 3 - Output Description HTML
- */
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
@@ -287,6 +324,8 @@ process output_documentation {
     markdown_to_html.py $output_docs -o results_description.html
     """
 }
+
+*/
 
 /*
  * Completion e-mail notification
