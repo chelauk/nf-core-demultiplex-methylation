@@ -224,12 +224,12 @@ process fastqc {
  */
 
 process demultiplex {
-
-  tag
+  echo true
+  tag  "${sample_id}-demultiplex"
   label 'process_medium'
 
   input:
-  tuple val(sample_id), file(reads) from ch_read_path
+  tuple val(sample_id), file(reads1), file(reads2) from ch_read_files_split
 
   output:
   tuple val(sample_id), file(*fastq) into demultiplexed
@@ -237,11 +237,9 @@ process demultiplex {
 
   script:
   """
-  splitFastqPair.pl ${sample_id}_R1.fastq ${sample_id}_R1.fastq
+  echo splitFastqPair.pl zcat $reads1  zcat $reads2
   """
  }
-
-process
 
 /*
  * STEP 3 - MultiQC
