@@ -234,6 +234,9 @@ ch_demultiplex= ch_demultiplex.flatten()
      (file =~ regexpPE)[0][1]
  }
 
+/*
+ * STEP 3 - bismark align
+ */
 
 process bismark {
    echo true
@@ -258,21 +261,28 @@ process bismark {
    """
    }
 
+/*
+ * STEP 4 - bismark methylation extract 
+ */
 
 process bismark_extract {
    echo true
-   tag "${sample_id}-bismark"
+   tag "${sample_id}-${index}-methylation"
    label "process_medium"
-   publishDir "${params.outdir}/demultiplex/${sample_id}/logs", mode: 'copy',
+
+   publishDir "${params.outdir}/bismark/${sample_id}/${index}", mode: 'copy',
       saveAs: { filename ->
-                   if       ( filename.indexOf("counts") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("hiCounts") > 0 ) "$filename"
-				   else if  ( filename.indexOf("summ") > 0 ) "$filename"
+                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("cov.gz") > 0 ) "$filename"
 				   else null
               }
 
    input:
    tuple val(sample_id), val(index), file(bam) from ch_bismark_align
+
+   output:
+   tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
 
    script:
    """
@@ -280,9 +290,36 @@ process bismark_extract {
    """
    }
 
+/*
+ * STEP 5 - bs_conversion assessment
+ */
+
+
+process bs_conversion {
+   echo true
+   tag "${sample_id}-${index}-bs_conversion"
+   label "process_medium"
+
+   publishDir "${params.outdir}/bismark/${sample_id}/${index}", mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("pdf") > 0 ) "$filename" 
+				   else null
+              }
+
+   input:
+   tuple val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_bismark_align
+
+   output:
+   tuple val(sample_id), val(index), file("*pdf") into ch_methylation_extract
+
+   script:
+   """
+   bs_conversion_assessment.R ${sample}-${index}
+   """
+   }
 
 /*
- * STEP 3 - MultiQC
+ * STEP 6 - MultiQC
  */
 
 process multiqc {
@@ -312,7 +349,7 @@ process multiqc {
 }
 
 /*
- * STEP 3 - Output Description HTML
+ * STEP 7 - Output Description HTML
  */
 
 process output_documentation {
