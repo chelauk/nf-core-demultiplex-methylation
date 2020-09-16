@@ -26,11 +26,7 @@ def helpMessage() {
                                     Available: conda, docker, singularity, test, awsbatch, <institute> and more
 
     Options:
-      --genome [str]                  Name of iGenomes reference
-      --single_end [bool]             Specifies that the input is single-end reads
-
-    References                        If not specified in the configuration file or you wish to overwrite any of the references
-      --fasta [file]                  Path to fasta reference
+      --refdir [str]                  Location of bismark reference directory
 
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -56,21 +52,6 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 
-// Check if genome exists in the config file
-if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-    exit 1, "The provided genome '${params.genome}' is not available in the iGenomes file. Currently the available genomes are ${params.genomes.keySet().join(", ")}"
-}
-
-// TODO nf-core: Add any reference files that are needed
-// Configurable reference genomes
-//
-// NOTE - THIS IS NOT USED IN THIS PIPELINE, EXAMPLE ONLY
-// If you want to use the channel below in a process, define the following:
-//   input:
-//   file fasta from ch_fasta
-//
-params.fasta = params.genome ? params.genomes[ params.genome ].fasta ?: false : false
-if (params.fasta) { ch_fasta = file(params.fasta, checkIfExists: true) }
 
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
@@ -97,26 +78,10 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 /*
  * Create a channel for input read files
  */
-if (params.readPaths) {
-    if (params.single_end) {
-        Channel
-            .from(params.readPaths)
-            .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true) ] ] }
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-            .into { ch_read_files_fastqc; ch_read_files_trimming }
-    } else {
-        Channel
-            .from(params.readPaths)
-            .map { row -> [ row[0], [ file(row[1][0], checkIfExists: true), file(row[1][1], checkIfExists: true) ] ] }
-            .ifEmpty { exit 1, "params.readPaths was empty - no input files supplied" }
-            .into { ch_read_files_fastqc; ch_read_files_trimming }
-    }
-} else {
-    Channel
-        .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
-        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-        .into { ch_read_files_fastqc; ch_read_files_split }
-}
+Channel
+    .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
+    .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
+    .into { ch_read_files_fastqc; ch_read_files_split }
 
 // Header log info
 log.info nfcoreHeader()
@@ -125,8 +90,6 @@ if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']         = custom_runName ?: workflow.runName
 // TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
-summary['Fasta Ref']        = params.fasta
-summary['Data Type']        = params.single_end ? 'Single-End' : 'Paired-End'
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
 summary['Output dir']       = params.outdir
@@ -172,6 +135,7 @@ Channel.from(summary.collect{ [it.key, it.value] })
 
 /*
  * Parse software version numbers
+ */
 
 process get_software_versions {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
@@ -185,19 +149,21 @@ process get_software_versions {
     file "software_versions.csv"
 
     script:
-    // TODO nf-core: Get all tools to print their version number here
     """
     echo $workflow.manifest.version > v_pipeline.txt
     echo $workflow.nextflow.version > v_nextflow.txt
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
-    scrape_software_versions.py &> software_versions_mqc.yaml
+    bismark --version > v_bismark.txt
+	scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
 
-*/
+
 /*
  * STEP 1 - FastQC
+ */
+
 process fastqc {
     tag "$name"
     label 'process_medium'
@@ -218,7 +184,6 @@ process fastqc {
     """
 }
 
-
 /*
  * STEP 2 - Demultiplex
  */
@@ -228,12 +193,20 @@ process fastqc {
 process demultiplex {
   tag  "${sample_id}-demultiplex"
   label "process_medium"
+  publishDir "${params.outdir}/demultiplex/${sample_id}/logs", mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("counts") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("hiCounts") > 0 ) "$filename"
+				   else if  ( filename.indexOf("summ") > 0 ) "$filename"
+				   else null
+              }
 
   input:
      tuple val(sample_id), file(reads) from ch_read_files_split
 
   output:
      file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
+     set file("*counts"), file("*hiCounts"), file("*summ") into demultiplex_log 
 
   script:
   fq1 = "${reads[0].baseName}"
@@ -266,22 +239,52 @@ process bismark {
    echo true
    tag "${sample_id}-bismark"
    label "process_medium"
-
+   publishDir "${params.outdir}/bismark/${sample_id}/${index}/", mode: 'copy',
+      saveAs: { filename ->
+				   if  ( filename.indexOf("bam") > 0 ) "bam/$filename"
+				   else null
+              }
    input:
-     tuple val(sample_id), val(index), file(reads) from ch_demultiplex
+   tuple val(sample_id), val(index), file(reads) from ch_demultiplex
+   
+   output:
+   tuple val(sample_id), val(index), file(*bam) into ch_bismark_align
 
    script:
    R1 = "${reads[0]}"
    R2 = "${reads[1]}"
    """
-   echo bismark --unmapped /scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/ -1 $R1 -2 $R2 --output_dir bismark_test
+   echo bismark --unmapped /scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/ -1 $R1 -2 $R2 
    """
    }
 
 
+process bismark_extract {
+   echo true
+   tag "${sample_id}-bismark"
+   label "process_medium"
+   publishDir "${params.outdir}/demultiplex/${sample_id}/logs", mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("counts") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("hiCounts") > 0 ) "$filename"
+				   else if  ( filename.indexOf("summ") > 0 ) "$filename"
+				   else null
+              }
+
+   input:
+   tuple val(sample_id), val(index), file(bam) from ch_bismark_align
+
+   script:
+   """
+   bismark_methylation_extractor --no_overlap --bedGraph $bam
+   """
+   }
+
 
 /*
  * STEP 3 - MultiQC
+ */
+
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
@@ -310,6 +313,8 @@ process multiqc {
 
 /*
  * STEP 3 - Output Description HTML
+ */
+
 process output_documentation {
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
@@ -325,7 +330,6 @@ process output_documentation {
     """
 }
 
-*/
 
 /*
  * Completion e-mail notification
