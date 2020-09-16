@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 args = commandArgs(trailingOnly=TRUE)
 # library ggplot2
-library(ggplot2)
+library("ggplot2")
 
 # Read in the table
 CHH    = read.table(list.files('^CHH_OB_'), sep = '\t',
