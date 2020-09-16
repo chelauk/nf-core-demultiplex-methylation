@@ -238,6 +238,8 @@ ch_demultiplex= ch_demultiplex.flatten()
  * STEP 3 - bismark align
  */
 
+params.genome_folder = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
+
 process bismark {
    echo true
    tag "${sample_id}-bismark"
@@ -249,15 +251,16 @@ process bismark {
               }
    input:
    tuple val(sample_id), val(index), file(reads) from ch_demultiplex
-   
+   path genome from params.genome_folder
+
    output:
-   tuple val(sample_id), val(index), file(*bam) into ch_bismark_align
+   tuple val(sample_id), val(index), file("*bam") into ch_bismark_align
 
    script:
    R1 = "${reads[0]}"
    R2 = "${reads[1]}"
    """
-   echo bismark --unmapped /scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/ -1 $R1 -2 $R2 
+   bismark --unmapped $genome -1 $R1 -2 $R2 
    """
    }
 
@@ -307,14 +310,14 @@ process bs_conversion {
               }
 
    input:
-   tuple val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_bismark_align
+   tuple val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
 
    output:
-   tuple val(sample_id), val(index), file("*pdf") into ch_methylation_extract
+   tuple val(sample_id), val(index), file("*pdf") into ch_bs_conversion
 
    script:
    """
-   bs_conversion_assessment.R ${sample}-${index}
+   bs_conversion_assessment.R ${sample_id}-${index}
    """
    }
 
