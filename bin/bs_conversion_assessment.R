@@ -7,7 +7,7 @@ library(ggplot2)
 CHH    = read.table(list.files('^CHH_OB_'), sep = '\t',
 				 skip = 1, stringsAsFactors = FALSE )
 
-CHB    = read.table(list.files('^CHG_OT_'), sep = '\t',
+CHG    = read.table(list.files('^CHG_OT_'), sep = '\t',
 				 skip = 1, stringsAsFactors = FALSE )
 
 CpG_OB = read.table(list.files('^CpG_OB_'), sep = '\t',
