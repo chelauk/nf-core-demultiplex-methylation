@@ -75,6 +75,8 @@ ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: t
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
+// default refdir
+params.refdir = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
 /*
  * Create a channel for input read files
  */
@@ -155,10 +157,10 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
     bismark --version > v_bismark.txt
+	R --version > r_version.txt
 	scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
-
 
 /*
  * STEP 1 - FastQC
@@ -238,22 +240,22 @@ ch_demultiplex= ch_demultiplex.flatten()
  * STEP 3 - bismark align
  */
 
-params.genome_folder = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
-
 process bismark {
    echo true
    tag "${sample_id}-bismark"
    label "process_medium"
    publishDir "${params.outdir}/bismark/${sample_id}/${index}/", mode: 'copy',
       saveAs: { filename ->
-				   if  ( filename.indexOf("bam") > 0 ) "bam/$filename"
-				   else null
+				   if      ( filename.indexOf("bam") > 0 ) "bam/$filename"
+				   else if ( filename.indexOf("report") >0 ) "/bam/log/$filename"
+				   else      null
               }
    input:
    tuple val(sample_id), val(index), file(reads) from ch_demultiplex
-   path genome from params.genome_folder
+   path genome from params.refdir
 
    output:
+   file(*report.txt) into ch_bismark_align_qc
    tuple val(sample_id), val(index), file("*bam") into ch_bismark_align
 
    script:
@@ -278,6 +280,8 @@ process bismark_extract {
                    if       ( filename.indexOf("png") > 0 ) "$filename" 
 				   else if  ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
 				   else if  ( filename.indexOf("cov.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("report") > 0 ) "$filename"
+				   else if  ( filename.indexOf("bias") > 0 ) "$filename"
 				   else null
               }
 
@@ -286,7 +290,8 @@ process bismark_extract {
 
    output:
    tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-   tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into methylation_extract_log
+   tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_log
+   tuple file("*report.txt"), file("M-bias.txt") into ch_methylation_extract_qc
 
    script:
    """
@@ -297,7 +302,6 @@ process bismark_extract {
 /*
  * STEP 5 - bs_conversion assessment
  */
-
 
 process bs_conversion {
    echo true
@@ -335,6 +339,8 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
+    file (methylation_reports) from ch_methylation_extract_qc.ifEmpty([])
+    file (bismark_reports) from ch_bismark_align_qc.collect().ifEmpty([])
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
