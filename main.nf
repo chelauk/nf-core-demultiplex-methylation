@@ -286,6 +286,7 @@ process bismark_extract {
 
    output:
    tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
+   tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into methylation_extract_log
 
    script:
    """
