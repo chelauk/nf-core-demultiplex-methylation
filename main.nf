@@ -244,10 +244,10 @@ process bismark {
    echo true
    tag "${sample_id}-bismark"
    label "process_medium"
-   publishDir "${params.outdir}/bismark/${sample_id}/${index}/", mode: 'copy',
+   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/", mode: 'copy',
       saveAs: { filename ->
 				   if      ( filename.indexOf("bam") > 0 ) "bam/$filename"
-				   else if ( filename.indexOf("report") >0 ) "bam/log/$filename"
+				   else if ( filename.indexOf("report") > 0 ) "log/$filename"
 				   else      null
               }
    input:
@@ -275,13 +275,13 @@ process bismark_extract {
    tag "${sample_id}-${index}-methylation"
    label "process_medium"
 
-   publishDir "${params.outdir}/bismark/${sample_id}/${index}", mode: 'copy',
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", mode: 'copy',
       saveAs: { filename ->
-                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+                   if       ( filename.indexOf("png") > 0 ) "log/$filename" 
 				   else if  ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
 				   else if  ( filename.indexOf("cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("report") > 0 ) "$filename"
-				   else if  ( filename.indexOf("bias") > 0 ) "$filename"
+				   else if  ( filename.indexOf("report") > 0 ) "log/$filename"
+				   else if  ( filename.indexOf("bias") > 0 ) "log/$filename"
 				   else null
               }
 
@@ -339,8 +339,8 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
-    file (methylation_reports) from ch_methylation_extract_qc.ifEmpty([])
-    file (bismark_reports) from ch_bismark_align_qc.collect().ifEmpty([])
+    file ('log/*') from ch_methylation_extract_qc.ifEmpty([])
+    file ('log/*report') from ch_bismark_align_qc.collect().ifEmpty([])
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:

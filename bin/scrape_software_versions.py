@@ -10,7 +10,7 @@ regexes = {
     'FastQC'  : ['v_fastqc.txt', r"FastQC v(\S+)"],
     'MultiQC' : ['v_multiqc.txt', r"multiqc, version (\S+)"],
     'Bismark' : ['v_bismark.txt', r"Bismark Version: v(\S+)"],
-    'R'       : ['v_R.txt', r"R version (\S+)"]
+    'R'       : ['r_version.txt', r"R version (\S+)"]
 }
 results = OrderedDict()
 results['nf-core/demultiplex'] = '<span style="color:#999999;\">N/A</span>'
