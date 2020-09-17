@@ -1,16 +1,16 @@
-#!/usr/bin/env Rscript
+#!/opt/conda/envs/nf-core-demultiplex-1.0dev/bin//Rscript --vanilla
 args = commandArgs(trailingOnly=TRUE)
 # library ggplot2
-library(ggplot2)
+library("ggplot2")
 
 # Read in the table
-CHH    = read.table(list.files('^CHH_OB_'), sep = '\t',
+CHH    = read.table(list.files( pattern = '^CHH_OB_'), sep = '\t',
 				 skip = 1, stringsAsFactors = FALSE )
 
-CHG    = read.table(list.files('^CHG_OT_'), sep = '\t',
+CHG    = read.table(list.files( pattern = '^CHG_OB_'), sep = '\t',
 				 skip = 1, stringsAsFactors = FALSE )
 
-CpG_OB = read.table(list.files('^CpG_OB_'), sep = '\t',
+CpG_OB = read.table(list.files( pattern = '^CpG_OB_'), sep = '\t',
 				 skip =1, stringsAsFactors = FALSE )
 # Get sample id
 sample = args[1]
