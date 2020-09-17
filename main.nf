@@ -60,16 +60,6 @@ if (!(workflow.runName ==~ /[a-z]+_[a-z]+/)) {
     custom_runName = workflow.runName
 }
 
-if (workflow.profile.contains('awsbatch')) {
-    // AWSBatch sanity checking
-    if (!params.awsqueue || !params.awsregion) exit 1, "Specify correct --awsqueue and --awsregion parameters on AWSBatch!"
-    // Check outdir paths to be S3 buckets if running on AWSBatch
-    // related: https://github.com/nextflow-io/nextflow/issues/813
-    if (!params.outdir.startsWith('s3:')) exit 1, "Outdir not on S3 - specify S3 Bucket to run on AWSBatch!"
-    // Prevent trace files to be stored on S3 since S3 does not support rolling files.
-    if (params.tracedir.startsWith('s3:')) exit 1, "Specify a local tracedir or run without trace! S3 cannot be used for tracefiles."
-}
-
 // Stage config files
 ch_multiqc_config = file("$baseDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config, checkIfExists: true) : Channel.empty()
@@ -99,11 +89,6 @@ summary['Launch dir']       = workflow.launchDir
 summary['Working dir']      = workflow.workDir
 summary['Script dir']       = workflow.projectDir
 summary['User']             = workflow.userName
-if (workflow.profile.contains('awsbatch')) {
-    summary['AWS Region']   = params.awsregion
-    summary['AWS Queue']    = params.awsqueue
-    summary['AWS CLI']      = params.awscli
-}
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
 if (params.config_profile_contact)     summary['Config Contact']     = params.config_profile_contact
@@ -244,10 +229,14 @@ process bismark {
    echo true
    tag "${sample_id}-bismark"
    label "process_medium"
-   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/", mode: 'copy',
+   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/bam", mode: 'copy',
       saveAs: { filename ->
-				   if      ( filename.indexOf("bam") > 0 ) "bam/$filename"
-				   else if ( filename.indexOf("report") > 0 ) "log/$filename"
+				   if      ( filename.indexOf("bam") > 0 ) "$filename"
+				   else      null
+              }
+   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/align_log", mode: 'copy',
+      saveAs: { filename ->
+				   if ( filename.indexOf("report") > 0 ) "$filename"
 				   else      null
               }
    input:
@@ -255,14 +244,14 @@ process bismark {
    path genome from params.refdir
 
    output:
-   file("*report.txt") into ch_bismark_align_qc
+   file "*report.txt" into ch_bismark_align_qc
    tuple val(sample_id), val(index), file("*bam") into ch_bismark_align
 
    script:
    R1 = "${reads[0]}"
    R2 = "${reads[1]}"
    """
-   bismark --unmapped $genome -1 $R1 -2 $R2 
+   bismark --unmapped $genome -1 $R1 -2 $R2 --basename $index 
    """
    }
 
@@ -277,11 +266,15 @@ process bismark_extract {
 
    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", mode: 'copy',
       saveAs: { filename ->
-                   if       ( filename.indexOf("png") > 0 ) "log/$filename" 
-				   else if  ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
+				   if       ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
 				   else if  ( filename.indexOf("cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("report") > 0 ) "log/$filename"
-				   else if  ( filename.indexOf("bias") > 0 ) "log/$filename"
+				   else null
+              }
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("report") > 0 ) "$filename"
+				   else if  ( filename.indexOf("bias") > 0 ) "$filename"
 				   else null
               }
 
@@ -290,8 +283,8 @@ process bismark_extract {
 
    output:
    tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-   tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_log
-   tuple file("*report.txt"), file("*M-bias.txt") into ch_methylation_extract_qc
+   tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
+   file "*{report,M-bias}.txt" into ch_methylation_extract_qc
 
    script:
    """
@@ -330,6 +323,8 @@ process bs_conversion {
  * STEP 6 - MultiQC
  */
 
+ch_methylation_extract_qc = ch_methylation_extract_qc.dump(tag: "extract")
+
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
@@ -339,8 +334,8 @@ process multiqc {
     // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
-    file ('log/*') from ch_methylation_extract_qc.ifEmpty([])
-    file ('log/*report') from ch_bismark_align_qc.collect().ifEmpty([])
+    file ('extract_log/*') from ch_methylation_extract_qc.collect().ifEmpty([])
+    file ('align_log/*') from ch_bismark_align_qc.collect().ifEmpty([])
     file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
