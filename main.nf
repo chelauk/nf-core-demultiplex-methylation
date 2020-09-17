@@ -255,7 +255,7 @@ process bismark {
    path genome from params.refdir
 
    output:
-   file(*report.txt) into ch_bismark_align_qc
+   file("*report.txt") into ch_bismark_align_qc
    tuple val(sample_id), val(index), file("*bam") into ch_bismark_align
 
    script:
