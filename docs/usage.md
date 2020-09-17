@@ -11,11 +11,8 @@
   * [`-profile`](#-profile)
   * [`--reads`](#--reads)
 * [Reference genomes](#reference-genomes)
-  * [`--refdir` (#--refdir)
-* [AWS Batch specific parameters](#aws-batch-specific-parameters)
-  * [`--awsqueue`](#--awsqueue)
-  * [`--awsregion`](#--awsregion)
-  * [`--awscli`](#--awscli)
+  * [`--refdir`](#--refdir)
+  
 * [Other command line parameters](#other-command-line-parameters)
   * [`--outdir`](#--outdir)
   * [`--email`](#--email)
