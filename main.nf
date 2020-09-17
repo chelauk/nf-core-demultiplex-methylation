@@ -247,7 +247,7 @@ process bismark {
    publishDir "${params.outdir}/bismark/${sample_id}/${index}/", mode: 'copy',
       saveAs: { filename ->
 				   if      ( filename.indexOf("bam") > 0 ) "bam/$filename"
-				   else if ( filename.indexOf("report") >0 ) "/bam/log/$filename"
+				   else if ( filename.indexOf("report") >0 ) "bam/log/$filename"
 				   else      null
               }
    input:
@@ -291,7 +291,7 @@ process bismark_extract {
    output:
    tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
    tuple val(sample_id), val(index), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_log
-   tuple file("*report.txt"), file("M-bias.txt") into ch_methylation_extract_qc
+   tuple file("*report.txt"), file("*M-bias.txt") into ch_methylation_extract_qc
 
    script:
    """
