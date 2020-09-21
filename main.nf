@@ -184,15 +184,15 @@ process fastqc {
  */
 
 ch_skewer_fastqc = ch_skewer_fastqc
-                     .map { file -> tuple(getSampleID(file[0]), getIndexID(file[0]),file) }
+                     .map { file -> tuple(getSKSampleID(file[0]), getSKIndexID(file[0]),file) }
 
- def getSampleID( file ){
+ def getSKSampleID( file ){
      // using RegEx to extract the SampleID
      regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
      (file =~ regexpPE)[0][1]
  }
  
-  def getIndexID( file ){
+  def getSKIndexID( file ){
      // using RegEx to extract the IndexID
      regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
      (file =~ regexpPE)[0][2]
