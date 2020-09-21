@@ -52,7 +52,6 @@ if (params.help) {
  * SET UP CONFIGURATION VARIABLES
  */
 
-
 // Has the run name been specified by the user?
 //  this has the bonus effect of catching both -name and --name
 custom_runName = params.name
@@ -174,8 +173,6 @@ process fastqc {
 /*
  * STEP 2 - Demultiplex
  */
-
-// ch_read_files_split = ch_read_files_split.dump(tag: "reads_ch")
 
 process demultiplex {
   tag  "${sample_id}-demultiplex"
