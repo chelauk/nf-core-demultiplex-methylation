@@ -27,7 +27,9 @@ def helpMessage() {
 
     Options:
       --refdir [str]                  Location of bismark reference directory
-
+      --demultiplex                   [bool] demultiplex script
+	  --skewer                        [bool] trim with skewer
+	  
     Other options:
       --outdir [file]                 The output directory where the results will be saved
       --email [email]                 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
@@ -66,6 +68,10 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // default refdir
 params.refdir = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
+
+// demultiplex or not
+
+
 /*
  * Create a channel for input read files
  */
@@ -146,6 +152,9 @@ process get_software_versions {
     """
 }
 
+// split ch_read_files_fastqc for trim and qc
+(ch_read_files_fastqc, ch_skewer_fastqc) = ch_read_files_fastqc.into(2)
+
 /*
  * STEP 1 - FastQC
  */
@@ -171,6 +180,46 @@ process fastqc {
 }
 
 /*
+ * STEP 1.5
+ */
+
+ch_skewer_fastqc = ch_skewer_fastqc
+                     .map { file -> tuple(getSampleID(file[0]), getIndexID(file[0]),file) }
+
+ def getSampleID( file ){
+     // using RegEx to extract the SampleID
+     regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
+     (file =~ regexpPE)[0][1]
+ }
+ 
+  def getIndexID( file ){
+     // using RegEx to extract the IndexID
+     regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
+     (file =~ regexpPE)[0][2]
+ }
+
+
+proces skewer {
+  tag  "${sample_id}-demultiplex"
+  label "process_medium"
+    
+    input:
+      tuple val(sample_id), file(reads) from ch_skewer_fastqc
+    output:
+	  tuple val(sample_id), val(index), file("*fastq.gz") into ch_skewer_out
+    when:
+	  params.skewer
+	script:
+    fq1 = "${reads[0].baseName}"
+    fq2 = "${reads[1].baseName}"
+    """
+	skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq1 | gzip -c ${sample_id}_${index}_R1.fastq.gz 
+    skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq2 | gzip -c ${sample_id}_${index}_R2.fastq.gz
+	"""
+
+}
+
+/*
  * STEP 2 - Demultiplex
  */
 
@@ -191,6 +240,8 @@ process demultiplex {
   output:
      file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
      set file("*counts"), file("*hiCounts"), file("*summ") into demultiplex_log 
+  
+  when: params.demultiplex
 
   script:
   fq1 = "${reads[0].baseName}"
@@ -217,6 +268,11 @@ ch_demultiplex= ch_demultiplex.flatten()
      regexpPE = /.+\/([\w_\-]+)_R[12].fastq.[ATGC]{6}.fastq/
      (file =~ regexpPE)[0][1]
  }
+
+
+// include skewer output (match flatten)
+ch_skewer_out = ch_skewer_out.flatten()
+ch_demultiplex = ch_demultiplex.mix(ch_skewer_out)
 
 /*
  * STEP 3 - bismark align
