@@ -19,3 +19,4 @@ dependencies:
   - bioconda::multiqc=1.9
   - bioconda::perl-gdgraph
   - bioconda::samtools=1.10
+  - bioconda::skewer=0.2.2
