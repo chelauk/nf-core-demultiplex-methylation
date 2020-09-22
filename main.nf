@@ -28,7 +28,7 @@ def helpMessage() {
     Options:
       --refdir [str]                  Location of bismark reference directory
       --demultiplex                   [bool] demultiplex script
-	  --skewer                        [bool] trim with skewer
+	  --trim                          [bool] trim with skewer
 	  
     Other options:
       --outdir [file]                 The output directory where the results will be saved
@@ -75,6 +75,7 @@ params.refdir = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
 /*
  * Create a channel for input read files
  */
+
 Channel
     .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
     .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
@@ -147,13 +148,14 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
     bismark --version > v_bismark.txt
+	trim-galore --version _v_trim-galore.txt
 	R --version > r_version.txt
 	scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
 
 // split ch_read_files_fastqc for trim and qc
-(ch_read_files_fastqc, ch_skewer_fastqc) = ch_read_files_fastqc.into(2)
+(ch_read_files_fastqc, ch_trim_fastqc) = ch_read_files_fastqc.into(2)
 
 /*
  * STEP 1 - FastQC
@@ -183,40 +185,38 @@ process fastqc {
  * STEP 1.5
  */
 
-ch_skewer_fastqc = ch_skewer_fastqc
-                     .map { file -> tuple(getSKSampleID(file[0]), getSKIndexID(file[0]),file) }
+ch_trim_fastqc = ch_trim_fastqc
+                     .map { file -> tuple(getTRIMSampleID(file[0]), getTRIMIndexID(file[0]),file) }
 
- def getSKSampleID( file ){
+ def getTRIMSampleID( file ){
      // using RegEx to extract the SampleID
      regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
      (file =~ regexpPE)[0][1]
  }
  
-  def getSKIndexID( file ){
+  def getTRIMIndexID( file ){
      // using RegEx to extract the IndexID
      regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
      (file =~ regexpPE)[0][2]
  }
 
 
-proces skewer {
+proces trimGalore {
   tag  "${sample_id}-demultiplex"
   label "process_medium"
     
     input:
-      tuple val(sample_id), file(reads) from ch_skewer_fastqc
+      tuple val(sample_id), file(reads) from ch_trim_fastqc
     output:
-	  tuple val(sample_id), val(index), file("*fastq.gz") into ch_skewer_out
+	  tuple val(sample_id), val(index), file("*fastq.gz") into ch_trim_out
     when:
-	  params.skewer
+	  params.trim
 	script:
-    fq1 = "${reads[0].baseName}"
-    fq2 = "${reads[1].baseName}"
+    fq1 = "${reads[0]}"
+    fq2 = "${reads[1]}"
     """
-	skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq1 | gzip -c ${sample_id}_${index}_R1.fastq.gz 
-    skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq2 | gzip -c ${sample_id}_${index}_R2.fastq.gz
+	trim_galore --paired --rrbs $fq1 $fq2
 	"""
-
 }
 
 /*
@@ -270,9 +270,9 @@ ch_demultiplex= ch_demultiplex.flatten()
  }
 
 
-// include skewer output (match flatten)
-ch_skewer_out = ch_skewer_out.flatten()
-ch_demultiplex = ch_demultiplex.mix(ch_skewer_out)
+// include trim output (match flatten)
+ch_trim_out = ch_trim_out.flatten()
+ch_demultiplex = ch_demultiplex.mix(ch_trim_out)
 
 /*
  * STEP 3 - bismark align
