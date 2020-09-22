@@ -69,9 +69,6 @@ ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 // default refdir
 params.refdir = '/scratch/DMP/EVGENMOD/gcresswell/MolecularClocks/genomes/'
 
-// demultiplex or not
-
-
 /*
  * Create a channel for input read files
  */
@@ -148,7 +145,7 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
     bismark --version > v_bismark.txt
-	trim-galore --version _v_trim-galore.txt
+	trim_galore --version v_trimgalore.txt
 	R --version > r_version.txt
 	scrape_software_versions.py &> software_versions_mqc.yaml
     """
@@ -186,36 +183,42 @@ process fastqc {
  */
 
 ch_trim_fastqc = ch_trim_fastqc
-                     .map { file -> tuple(getTRIMSampleID(file[0]), getTRIMIndexID(file[0]),file) }
+                     .map { prefix, file -> tuple(getTRIMSampleID(prefix), getTRIMIndexID(prefix),file) }
 
- def getTRIMSampleID( file ){
+ def getTRIMSampleID( prefix ){
      // using RegEx to extract the SampleID
      regexpPE = /([A-Z]+)-[a-z0-9-_]+S[0-9]+./
      (prefix =~ regexpPE)[0][1]
  }
  
-  def getTRIMIndexID( file ){
+  def getTRIMIndexID( prefix ){
      // using RegEx to extract the IndexID
      regexpPE = /[A-Z]+-([a-z0-9-_]+S[0-9]+).+/
      (prefix  =~ regexpPE)[0][1]
  }
 
-
-proces trimGalore {
-  tag  "${sample_id}-demultiplex"
-  label "process_medium"
+ch_trim_fastqc = ch_trim_fastqc.dump(tag: "trim")
+EM-single_S5_L001_R1_001.fastq.gz_trimming_report.txt
+process trimGalore {
+    tag  "${sample_id}-demultiplex"
+    label "process_medium"
+    publishDir "${params.outdir}/trimming", mode: 'copy',
+        saveAs: { filename ->
+                      filename.indexOf(".txt") > 0 ? "$filename" : "$filename"
+                }
     
     input:
-      tuple val(sample_id), file(reads) from ch_trim_fastqc
+      tuple val(sample_id), val(index), file(reads) from ch_trim_fastqc
     output:
-	  tuple val(sample_id), val(index), file("*fastq.gz") into ch_trim_out
-    when:
+	  tuple val(sample_id), val(index), file("*fq.gz") into ch_trim_out
+      file(*txt) into ch_trimming_report
+	when:
 	  params.trim
 	script:
     fq1 = "${reads[0]}"
     fq2 = "${reads[1]}"
     """
-	trim_galore --paired --rrbs $fq1 $fq2
+	trim_galore --paired --rrbs $fq1 $fq2 --basename ${sample_id}_${index}
 	"""
 }
 
@@ -271,7 +274,6 @@ ch_demultiplex= ch_demultiplex.flatten()
 
 
 // include trim output (match flatten)
-ch_trim_out = ch_trim_out.flatten()
 ch_demultiplex = ch_demultiplex.mix(ch_trim_out)
 
 /*
@@ -321,7 +323,7 @@ process bismark_extract {
       saveAs: { filename ->
 				   if       ( filename.indexOf("bedGraph.gz") > 0 ) "$filename"
 				   else if  ( filename.indexOf("cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("bt2_pe.txt") > 0 ) "$filename"
+				   else if  ( filename.indexOf("pe.txt") > 0 ) "$filename"
 				   else null
               }
    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", mode: 'copy',
@@ -337,7 +339,7 @@ process bismark_extract {
 
    output:
    tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-   tuple val(sample_id), val(index), file("*bt2_pe.txt"),file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
+   tuple val(sample_id), val(index), file("*pe.txt"),file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
    file "*{report,M-bias}.txt" into ch_methylation_extract_qc
 
    script:
@@ -385,12 +387,12 @@ process multiqc {
     input:
     file (multiqc_config) from ch_multiqc_config
     file (mqc_custom_config) from ch_multiqc_custom_config.collect().ifEmpty([])
-    // TODO nf-core: Add in log files from your new processes for MultiQC to find!
     file ('fastqc/*') from ch_fastqc_results.collect().ifEmpty([])
     file ('software_versions/*') from ch_software_versions_yaml.collect()
     file ('extract_log/*') from ch_methylation_extract_qc.collect().ifEmpty([])
     file ('align_log/*') from ch_bismark_align_qc.collect().ifEmpty([])
-    file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
+    file ('trimming/*') from ch_trimming_report.collect().ifEmpty([])
+	file workflow_summary from ch_workflow_summary.collectFile(name: "workflow_summary_mqc.yaml")
 
     output:
     file "*multiqc_report.html" into ch_multiqc_report
