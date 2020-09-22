@@ -153,7 +153,7 @@ process get_software_versions {
 }
 
 // split ch_read_files_fastqc for trim and qc
-(ch_read_files_fastqc, ch_skewer_fastqc) = ch_read_files_fastqc.into(2)
+(ch_read_files_fastqc, ch_skewer_fastq) = ch_read_files_fastqc.into(2)
 
 /*
  * STEP 1 - FastQC
@@ -183,39 +183,40 @@ process fastqc {
  * STEP 1.5
  */
 
-ch_skewer_fastqc = ch_skewer_fastqc
-                     .map { file -> tuple(getSKSampleID(file[0]), getSKIndexID(file[0]),file) }
+ch_skewer_fastq = ch_skewer_fastq.dump(tag:"skewer")
+ch_skewer_fastq = ch_skewer_fastq
+                     .map { prefix, file -> tuple(prefix, getSKSampleID(prefix), getSKIndexID(prefix),file) }
 
- def getSKSampleID( file ){
+ def getSKSampleID( prefix ){
      // using RegEx to extract the SampleID
-     regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
-     (file =~ regexpPE)[0][1]
+     regexpPE = /([A-Z]+)-[a-z0-9-_]+S[0-9]+./
+     (prefix =~ regexpPE)[0][1]
  }
  
-  def getSKIndexID( file ){
+  def getSKIndexID( prefix ){
      // using RegEx to extract the IndexID
-     regexpPE = /([A-Z]+)-([a-z0-9-_]+S\d).+fastq.gz/
-     (file =~ regexpPE)[0][2]
+     regexpPE = /[A-Z]+-([a-z0-9-_]+S[0-9]+).+/
+     (prefix  =~ regexpPE)[0][1]
  }
 
 
-proces skewer {
+process skewer {
   tag  "${sample_id}-demultiplex"
   label "process_medium"
     
-    input:
-      tuple val(sample_id), file(reads) from ch_skewer_fastqc
-    output:
-	  tuple val(sample_id), val(index), file("*fastq.gz") into ch_skewer_out
-    when:
-	  params.skewer
-	script:
-    fq1 = "${reads[0].baseName}"
-    fq2 = "${reads[1].baseName}"
-    """
-	skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq1 | gzip -c ${sample_id}_${index}_R1.fastq.gz 
-    skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq2 | gzip -c ${sample_id}_${index}_R2.fastq.gz
-	"""
+  input:
+    tuple val(prefix), val(sample_id), val(index),  file(reads) from ch_skewer_fastq
+  output:
+    tuple val(sample_id), val(index), file("*fastq.gz") into ch_skewer_out
+  when:
+    params.skewer
+  script:
+    fq1 = "${reads[0]}"
+    fq2 = "${reads[1]}"
+  """
+  skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq1 | gzip > ${sample_id}_${index}_R1.fastq.gz 
+  skewer -l 50 -r 0.1 -d 0.03 -Q 10 -n --stdout $fq2 | gzip > ${sample_id}_${index}_R2.fastq.gz
+  """
 
 }
 
@@ -270,8 +271,8 @@ ch_demultiplex= ch_demultiplex.flatten()
  }
 
 
-// include skewer output (match flatten)
-ch_skewer_out = ch_skewer_out.flatten()
+// include skewer output 
+// ch_skewer_out = ch_skewer_out.flatten()
 ch_demultiplex = ch_demultiplex.mix(ch_skewer_out)
 
 /*
@@ -304,7 +305,7 @@ process bismark {
    R1 = "${reads[0]}"
    R2 = "${reads[1]}"
    """
-   bismark --unmapped $genome -1 $R1 -2 $R2 --basename $index 
+   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index} 
    """
    }
 
