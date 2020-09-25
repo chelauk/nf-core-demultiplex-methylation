@@ -197,8 +197,6 @@ ch_trim_fastqc = ch_trim_fastqc
      (prefix  =~ regexpPE)[0][1]
  }
 
-ch_trim_fastqc = ch_trim_fastqc.dump(tag: "trim")
-EM-single_S5_L001_R1_001.fastq.gz_trimming_report.txt
 process trimGalore {
     tag  "${sample_id}-demultiplex"
     label "process_medium"
@@ -211,7 +209,7 @@ process trimGalore {
       tuple val(sample_id), val(index), file(reads) from ch_trim_fastqc
     output:
 	  tuple val(sample_id), val(index), file("*fq.gz") into ch_trim_out
-      file(*txt) into ch_trimming_report
+      file("*txt") into ch_trimming_report
 	when:
 	  params.trim
 	script:
@@ -378,8 +376,6 @@ process bs_conversion {
 /*
  * STEP 6 - MultiQC
  */
-
-ch_methylation_extract_qc = ch_methylation_extract_qc.dump(tag: "extract")
 
 process multiqc {
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
