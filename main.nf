@@ -312,7 +312,7 @@ process bismark {
    R1 = "${reads[0]}"
    R2 = "${reads[1]}"
    """
-   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}
+   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
    """
    }
 
@@ -376,50 +376,66 @@ process bismark_unmethylated {
    """
    }
 
-ch_bismark_align = ch_bismark_align.mix(ch_bismark_methylated_align,ch_bismark_methylated_align)
+ch_bismark_align = ch_bismark_align.mix(ch_bismark_methylated_align,ch_bismark_unmethylated_align)
 /*
  * STEP 4 - bismark methylation extract 
  */
-
+ch_bismark_align = ch_bismark_align.dump(tag: 'debug1')
 process bismark_extract {
    echo true
    tag "${sample_id}-${index}-methylation"
    label "process_medium"
 
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", mode: 'copy',
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", pattern: '*_test_pe*', mode: 'copy',
       saveAs: { filename ->
-				   if       ( filename.indexOf("*bismark*bedGraph.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bismark*cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bismark*pe.txt") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*bedGraph.gz") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*cov.gz") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*pe.txt") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*bedGraph.gz") > 0 ) "/unmeth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*cov.gz") > 0 ) "/unmeth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*pe.txt") > 0 ) "/unmeth_ctrl/$filename"
+				   if       ( filename.indexOf("_test_pe.bedGraph.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_test_pe.bismark.cov.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_test_pe.txt") > 0 ) "$filename"
 				   else null
-              }
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", mode: 'copy',
+				   }
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
       saveAs: { filename ->
-                   if       ( filename.indexOf("*bismark*png") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("*bismark*report") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bismark*bias") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*png") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*report") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_meth_ctrl*bias") > 0 ) "/meth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*png") > 0 ) "/unmeth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*report") > 0 ) "/unmeth_ctrl/$filename"
-				   else if  ( filename.indexOf("*_unmeth_ctrl*bias") > 0 ) "/unmeth_ctrl/$filename"
+				   if       ( filename.indexOf("_meth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_meth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_meth_ctrl_pe.txt") > 0 ) "$filename"
 				   else null
-              }
+				   }
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
+      saveAs: { filename ->
+				   if       ( filename.indexOf("_unmeth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_unmeth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
+				   else if  ( filename.indexOf("_unmeth_ctrl_pe.txt") > 0 ) "$filename"
+				   else null
+				  } 
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", pattern: '*_test_pe*', mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
+				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+				   else null
+				   }
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
+				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+				   else null
+				   }
+   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
+      saveAs: { filename ->
+                   if       ( filename.indexOf("png") > 0 ) "$filename" 
+				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
+				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+				   else null
+				   }
 
    input:
    tuple val(sample_type), val(sample_id), val(index), file(bam) from ch_bismark_align
 
    output:
    tuple val(sample_type), val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-   tuple val(sample_id), val(index), file("*pe.txt"),file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
-   file "*{report,M-bias}.txt" into ch_methylation_extract_qc
+   tuple val(sample_type), val(sample_id), val(index), file("*pe.txt"), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
+   tuple val(sample_type), val(sample_id), val(index), file("*{report,M-bias}.txt") into ch_methylation_extract_qc
 
    script:
    """
