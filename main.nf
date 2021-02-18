@@ -152,9 +152,9 @@ process get_software_versions {
 
     script:
     """
-	echo "${workflow.manifest.version}" &> v_pipeline.txt 2>&1 || true
+    echo "${workflow.manifest.version}" &> v_pipeline.txt 2>&1 || true
     echo "${workflow.nextflow.version}" &> v_nextflow.txt 2>&1 || true
-	fastqc --version &> v_fastqc.txt 2>&1 || true
+    fastqc --version &> v_fastqc.txt 2>&1 || true
     multiqc --version > v_multiqc.txt 2>&1 || true
     bismark --version > v_bismark.txt 2>&1 || true
     trim_galore --version > v_trimgalore.txt 2>&1 || true
