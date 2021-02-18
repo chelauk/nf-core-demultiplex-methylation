@@ -31,7 +31,8 @@ def helpMessage() {
       --unmethylated_refdir           Location of bismark unmethylated reference directory
 	  --demultiplex                   [bool] demultiplex script
 	  --trim                          [bool] trim with skewer
-	  
+	  --indexed						  [bool] are the files indexed?
+
     Other options:
       --outdir [file]                 The output directory where the results will be saved
       --email [email]                 Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits
@@ -51,6 +52,11 @@ if (params.help) {
     helpMessage()
     exit 0
 }
+/*
+ * intitiate params
+ */
+
+ch_indexed = params.indexed ? Channel.value(params.indexed): null
 
 /*
  * SET UP CONFIGURATION VARIABLES
@@ -151,9 +157,9 @@ process get_software_versions {
     fastqc --version > v_fastqc.txt
     multiqc --version > v_multiqc.txt
     bismark --version > v_bismark.txt
-	trim_galore --version v_trimgalore.txt
-	R --version > r_version.txt
-	scrape_software_versions.py &> software_versions_mqc.yaml
+    trim_galore --version > v_trimgalore.txt
+    R --version > r_version.txt
+    scrape_software_versions.py &> software_versions_mqc.yaml
     """
 }
 
@@ -187,9 +193,13 @@ process fastqc {
 /*
  * STEP 1.5
  */
-
-ch_trim_fastqc = ch_trim_fastqc
+if (ch_indexed) {
+	ch_trim_fastqc = ch_trim_fastqc
                      .map { prefix, file -> tuple(getTRIMSampleID(prefix), getTRIMIndexID(prefix),file) }
+	} else {
+    ch_trim_fastqc = ch_trim_fastqc
+	                 .map { prefix, file -> tuple(prefix, "index" ,file) }
+	}
 
  def getTRIMSampleID( prefix ){
      // using RegEx to extract the SampleID
