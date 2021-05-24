@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/demultiplex/master/nextflow_schema.json",
     "title": "nf-core/demultiplex pipeline parameters",
-    "description": "demultiplex",
+    "description": "demultiplex and bismark for rachel",
     "type": "object",
     "definitions": {
         "input_output_options": {
