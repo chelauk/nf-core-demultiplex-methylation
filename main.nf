@@ -331,7 +331,7 @@ process bismark {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
     """
     }
@@ -363,7 +363,7 @@ process bismark_methylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
     """
 }
@@ -395,7 +395,7 @@ process bismark_unmethylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
     """
 }
