@@ -140,6 +140,9 @@ Channel.from(summary.collect{ [it.key, it.value] })
  */
 
 process get_software_versions {
+
+    label 'process_low'
+    
     publishDir "${params.outdir}/pipeline_info", mode: 'copy',
         saveAs: { filename ->
                       if (filename.indexOf(".csv") > 0) filename
@@ -491,6 +494,9 @@ process bs_conversion {
  */
 
 process multiqc {
+
+    label 'process_low'
+    
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
@@ -523,6 +529,9 @@ process multiqc {
  */
 
 process output_documentation {
+
+    label 'process_low'
+    
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
