@@ -19,13 +19,13 @@ i. Install [`nextflow`](https://nf-co.re/usage/installation)
 
 ii. git clone the pipeline  
 
-```bash
-git clone https://github.com/chelauk/nf-core-demultiplex/
+```bash  
+git clone https://github.com/chelauk/nf-core-demultiplex/  
 ```
 
 i. Start running your own analysis!  
 
-```bash
+```bash  
 nextflow run nf-core-demultiplex --reads '*R{1,2}.fastq.gz' -profile icr_davros,singularity -c local.config -r resume -with-tower
 ```
 
