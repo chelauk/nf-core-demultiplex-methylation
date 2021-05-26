@@ -17,13 +17,13 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 
 i. Install [`nextflow`](https://nf-co.re/usage/installation)
 
-ii. git clone the pipeline
+ii. git clone the pipeline  
 
 ```bash
 git clone https://github.com/chelauk/nf-core-demultiplex/
 ```
 
-i. Start running your own analysis!
+i. Start running your own analysis!  
 
 ```bash
 nextflow run nf-core-demultiplex --reads '*R{1,2}.fastq.gz' -profile icr_davros,singularity -c local.config -r resume -with-tower
