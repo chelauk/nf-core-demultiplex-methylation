@@ -75,7 +75,7 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 ch_output_docs = file("$baseDir/docs/output.md", checkIfExists: true)
 
 // default refdir
-params.refdir = '/data/scratch/DMP/UCEC/EVGENMOD/cjames/rachel/genomes'
+params.refdir = '/data/scratch/DMP/UCEC/EVGENMOD/cjames/rachel/MolecularClocks/genomes'
 params.methylated_refdir = workflow.projectDir + '/genome/RRBS_methylated_control'
 params.unmethylated_refdir = workflow.projectDir + '/genome/RRBS_unmethylated_control'
 /*
