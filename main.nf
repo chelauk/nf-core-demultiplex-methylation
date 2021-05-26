@@ -222,6 +222,7 @@ if (ch_indexed) {
 process trimGalore {
     tag  "${sample_id}-demultiplex"
     label "process_medium"
+    conda '/opt/software/applications/anaconda/3/envs/trim-galore0.6.6'
     publishDir "${params.outdir}/trimming", mode: 'copy',
         saveAs: { filename ->
                       filename.indexOf(".txt") > 0 ? "$filename" : "$filename"
@@ -306,6 +307,7 @@ ch_fastq_main = ch_demultiplex.mix(ch_trim_out)
 process bismark {
 
     tag "${sample_id}-bismark"
+    conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
     label "process_medium"
     publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/bam", mode: 'copy',
         saveAs: { filename ->
@@ -329,7 +331,8 @@ process bismark {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
     """
     }
 
@@ -341,6 +344,7 @@ process bismark_methylated {
 
     tag "${sample_id}-bismark"
     label "process_medium"
+    conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
 
     publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/meth_ctrl/align_log", mode: 'copy',
         saveAs: { filename ->
@@ -359,7 +363,8 @@ process bismark_methylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
     """
 }
 
@@ -371,6 +376,7 @@ process bismark_unmethylated {
 
     tag "${sample_id}-bismark"
     label "process_medium"
+    conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
 
     publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/unmeth_ctrl/align_log", mode: 'copy',
         saveAs: { filename ->
@@ -389,7 +395,8 @@ process bismark_unmethylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
+    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bowtie2.4.2/ \\
+    --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
     """
 }
 
@@ -402,6 +409,7 @@ process bismark_extract {
 
     tag "${sample_id}-${index}-methylation"
     label "process_medium"
+    conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
 
     publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", pattern: '*_test_pe*', mode: 'copy',
         saveAs: { filename ->
@@ -496,7 +504,7 @@ process bs_conversion {
 process multiqc {
 
     label 'process_low'
-    
+    conda '/data/scratch/DMP/UCEC/EVGENMOD/cjames/.conda/envs/multiqc1.10'
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
