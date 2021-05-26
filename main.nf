@@ -244,50 +244,51 @@ process trimGalore {
  */
 
 process demultiplex {
-  tag  "${sample_id}-demultiplex"
-  label "process_medium"
-  publishDir "${params.outdir}/demultiplex/${sample_id}/logs", mode: 'copy',
-      saveAs: { filename ->
-                   if       ( filename.indexOf("counts") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("hiCounts") > 0 ) "$filename"
-				   else if  ( filename.indexOf("summ") > 0 ) "$filename"
-				   else null
-              }
+    tag  "${sample_id}-demultiplex"
+    label "process_medium"
+    publishDir "${params.outdir}/demultiplex/${sample_id}/logs", mode: 'copy',
+        saveAs: { filename ->
+                    if       ( filename.indexOf("counts") > 0 ) "$filename" 
+                    else if  ( filename.indexOf("hiCounts") > 0 ) "$filename"
+                    else if  ( filename.indexOf("summ") > 0 ) "$filename"
+                    else null
+        }
 
-  input:
-     tuple val(sample_id), file(reads) from ch_read_files_split
+    input:
+        tuple val(sample_id), file(reads) from ch_read_files_split
 
-  output:
-     file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
-     set file("*counts"), file("*hiCounts"), file("*summ") into demultiplex_log 
-  
-  when: params.demultiplex
+    output:
+        file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
+        set file("*counts"), file("*hiCounts"), file("*summ") into demultiplex_log 
 
-  script:
-  fq1 = "${reads[0].baseName}"
-  fq2 = "${reads[1].baseName}"
-  """
-  gzip -dc ${reads[0]} > $fq1 
-  gzip -dc ${reads[1]} > $fq2 
-  splitFastqPair.pl $fq1 $fq2 
-  """
- }
+    when: params.demultiplex
 
-ch_demultiplex= ch_demultiplex.flatten()
-                              .map{file -> tuple(getSampleID(file), getIndex(file),file) }
-  		                      .groupTuple(by:[1,0])
+    script:
+    fq1 = "${reads[0].baseName}"
+    fq2 = "${reads[1].baseName}"
+    """
+    gzip -dc ${reads[0]} > $fq1 
+    gzip -dc ${reads[1]} > $fq2 
+    splitFastqPair.pl $fq1 $fq2 
+    """
+}
 
- def getIndex( file ){
+ch_demultiplex= ch_demultiplex
+                    .flatten()
+                    .map{file -> tuple(getSampleID(file), getIndex(file),file) }
+                    .groupTuple(by:[1,0])
+
+def getIndex( file ){
      // using RegEx to extract the SampleID
-     regexpPE = /.+_R[12].fastq.([ATGC]{6}).fastq/
-     (file =~ regexpPE)[0][1]
- }
- 
- def getSampleID( file ){
+    regexpPE = /.+_R[12].fastq.([ATGC]{6}).fastq/
+    (file =~ regexpPE)[0][1]
+}
+
+def getSampleID( file ){
      // using RegEx to extract the SampleID
-     regexpPE = /.+\/([\w_\-]+)_R[12].fastq.[ATGC]{6}.fastq/
-     (file =~ regexpPE)[0][1]
- }
+    regexpPE = /.+\/([\w_\-]+)_R[12].fastq.[ATGC]{6}.fastq/
+    (file =~ regexpPE)[0][1]
+}
 
 
 // include trim output (match flatten)
@@ -300,94 +301,94 @@ ch_fastq_main = ch_demultiplex.mix(ch_trim_out)
  */
 
 process bismark {
-   echo true
-   tag "${sample_id}-bismark"
-   label "process_medium"
-   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/bam", mode: 'copy',
-      saveAs: { filename ->
-				   if      ( filename.indexOf("bam") > 0 ) "$filename"
-				   else      null
-              }
-   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/align_log", mode: 'copy',
-      saveAs: { filename ->
-				   if ( filename.indexOf("report") > 0 ) "$filename"
-				   else      null
-              }
-   input:
-   tuple val(sample_id), val(index), file(reads) from ch_fastq_main
-   path genome from params.refdir
 
-   output:
-   file "*report.txt" into ch_bismark_align_qc
-   tuple val("bismark"), val(sample_id), val(index), file("*bam") into ch_bismark_align
+    tag "${sample_id}-bismark"
+    label "process_medium"
+    publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/bam", mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("bam") > 0 ) "$filename"
+                    else      null
+                }
+    publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/align_log", mode: 'copy',
+        saveAs: { filename ->
+                if ( filename.indexOf("report") > 0 ) "$filename"
+                else      null
+                }
+    input:
+        tuple val(sample_id), val(index), file(reads) from ch_fastq_main
+        path genome from params.refdir
 
-   script:
-   R1 = "${reads[0]}"
-   R2 = "${reads[1]}"
-   """
-   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
-   """
-   }
+    output:
+        file "*report.txt" into ch_bismark_align_qc
+        tuple val("bismark"), val(sample_id), val(index), file("*bam") into ch_bismark_align
+
+    script:
+    R1 = "${reads[0]}"
+    R2 = "${reads[1]}"
+    """
+    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
+    """
+    }
 
 /*
  * STEP 3b - bismark meth_ctrl align
  */
 
 process bismark_methylated {
-   echo true
-   tag "${sample_id}-bismark"
-   label "process_medium"
-   
-   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/meth_ctrl/align_log", mode: 'copy',
-      saveAs: { filename ->
-				   if ( filename.indexOf("report") > 0 ) "$filename"
-				   else      null
-              }
-   input:
-   tuple  val(sample_id), val(index), file(reads) from ch_fastq_methylated_control
-   path genome from params.methylated_refdir
 
-   output:
-   file "*report.txt" into ch_bismark_meth_ctrl_align_qc
-   tuple val("meth_ctrl"), val(sample_id), val(index), file("*bam") into ch_bismark_methylated_align
+    tag "${sample_id}-bismark"
+    label "process_medium"
 
-   script:
-   R1 = "${reads[0]}"
-   R2 = "${reads[1]}"
-   """
-   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
-   """
-   }
+    publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/meth_ctrl/align_log", mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("report") > 0 ) "$filename"
+                    else      null
+                }
+    input:
+        tuple  val(sample_id), val(index), file(reads) from ch_fastq_methylated_control
+        path genome from params.methylated_refdir
+
+    output:
+        file "*report.txt" into ch_bismark_meth_ctrl_align_qc
+        tuple val("meth_ctrl"), val(sample_id), val(index), file("*bam") into ch_bismark_methylated_align
+
+    script:
+    R1 = "${reads[0]}"
+    R2 = "${reads[1]}"
+    """
+    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
+    """
+}
 
 /*
  * STEP 3c - bismark unmeth_ctrl align
  */
 
 process bismark_unmethylated {
-   echo true
-   tag "${sample_id}-bismark"
-   label "process_medium"
-   
-   publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/unmeth_ctrl/align_log", mode: 'copy',
-      saveAs: { filename ->
-				   if ( filename.indexOf("report") > 0 ) "$filename"
-				   else      null
-              }
-   input:
-   tuple val(sample_id), val(index), file(reads) from ch_fastq_unmethylated_control
-   path genome from params.unmethylated_refdir
 
-   output:
-   file "*report.txt" into ch_bismark_unmeth_ctrl_align_qc
-   tuple val("unmeth_ctrl"), val(sample_id), val(index), file("*bam") into ch_bismark_unmethylated_align
+    tag "${sample_id}-bismark"
+    label "process_medium"
 
-   script:
-   R1 = "${reads[0]}"
-   R2 = "${reads[1]}"
-   """
-   bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
-   """
-   }
+    publishDir "${params.outdir}/bismark/align/${sample_id}/${index}/unmeth_ctrl/align_log", mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("report") > 0 ) "$filename"
+                    else      null
+                }
+    input:
+        tuple val(sample_id), val(index), file(reads) from ch_fastq_unmethylated_control
+        path genome from params.unmethylated_refdir
+
+    output:
+        file "*report.txt" into ch_bismark_unmeth_ctrl_align_qc
+        tuple val("unmeth_ctrl"), val(sample_id), val(index), file("*bam") into ch_bismark_unmethylated_align
+
+    script:
+    R1 = "${reads[0]}"
+    R2 = "${reads[1]}"
+    """
+    bismark --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
+    """
+}
 
 ch_bismark_align = ch_bismark_align.mix(ch_bismark_methylated_align,ch_bismark_unmethylated_align)
 /*
@@ -395,95 +396,95 @@ ch_bismark_align = ch_bismark_align.mix(ch_bismark_methylated_align,ch_bismark_u
  */
 ch_bismark_align = ch_bismark_align.dump(tag: 'debug1')
 process bismark_extract {
-   echo true
-   tag "${sample_id}-${index}-methylation"
-   label "process_medium"
 
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", pattern: '*_test_pe*', mode: 'copy',
-      saveAs: { filename ->
-				   if       ( filename.indexOf("_test_pe.bedGraph.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_test_pe.bismark.cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_test_pe.txt") > 0 ) "$filename"
-				   else null
-				   }
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
-      saveAs: { filename ->
-				   if       ( filename.indexOf("_meth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_meth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_meth_ctrl_pe.txt") > 0 ) "$filename"
-				   else null
-				   }
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
-      saveAs: { filename ->
-				   if       ( filename.indexOf("_unmeth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_unmeth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
-				   else if  ( filename.indexOf("_unmeth_ctrl_pe.txt") > 0 ) "$filename"
-				   else null
-				  } 
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", pattern: '*_test_pe*', mode: 'copy',
-      saveAs: { filename ->
-                   if       ( filename.indexOf("png") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
-				   else null
-				   }
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
-      saveAs: { filename ->
-                   if       ( filename.indexOf("png") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
-				   else null
-				   }
-   publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
-      saveAs: { filename ->
-                   if       ( filename.indexOf("png") > 0 ) "$filename" 
-				   else if  ( filename.indexOf("report.txt") > 0 ) "$filename"
-				   else if  ( filename.indexOf("*bias.txt") > 0 ) "$filename"
-				   else null
-				   }
+    tag "${sample_id}-${index}-methylation"
+    label "process_medium"
 
-   input:
-   tuple val(sample_type), val(sample_id), val(index), file(bam) from ch_bismark_align
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", pattern: '*_test_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("_test_pe.bedGraph.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_test_pe.bismark.cov.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_test_pe.txt") > 0 ) "$filename"
+                    else null
+                }
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("_meth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_meth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_meth_ctrl_pe.txt") > 0 ) "$filename"
+                    else null
+                }
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("_unmeth_ctrl_pe.bedGraph.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_unmeth_ctrl_pe.bismark.cov.gz") > 0 ) "$filename"
+                    else if ( filename.indexOf("_unmeth_ctrl_pe.txt") > 0 ) "$filename"
+                    else null
+                } 
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log", pattern: '*_test_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("png") > 0 ) "$filename" 
+                    else if ( filename.indexOf("report.txt") > 0 ) "$filename"
+                    else if ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+                    else null
+                }
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/meth_ctrl", pattern: '*_meth_ctrl_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("png") > 0 ) "$filename" 
+                    else if ( filename.indexOf("report.txt") > 0 ) "$filename"
+                    else if ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+                    else null
+                }
+    publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}/extract_log/unmeth_ctrl", pattern: '*_unmeth_ctrl_pe*', mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("png") > 0 ) "$filename" 
+                    else if ( filename.indexOf("report.txt") > 0 ) "$filename"
+                    else if ( filename.indexOf("*bias.txt") > 0 ) "$filename"
+                    else null
+                }
 
-   output:
-   tuple val(sample_type), val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-   tuple val(sample_type), val(sample_id), val(index), file("*pe.txt"), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
-   tuple val(sample_type), val(sample_id), val(index), file("*{report,M-bias}.txt") into ch_methylation_extract_qc
+    input:
+        tuple val(sample_type), val(sample_id), val(index), file(bam) from ch_bismark_align
 
-   script:
-   """
-   bismark_methylation_extractor --no_overlap --bedGraph $bam
-   """
-   }
+    output:
+        tuple val(sample_type), val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
+        tuple val(sample_type), val(sample_id), val(index), file("*pe.txt"), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
+        tuple val(sample_type), val(sample_id), val(index), file("*{report,M-bias}.txt") into ch_methylation_extract_qc
+
+    script:
+    """
+    bismark_methylation_extractor --no_overlap --bedGraph $bam
+    """
+}
 
 /*
  * STEP 5 - bs_conversion assessment
  */
 
 process bs_conversion {
-   echo true
-   tag "${sample_id}-${index}-bs_conversion"
-   label "process_medium"
 
-   publishDir "${params.outdir}/bismark/${sample_id}/${index}", mode: 'copy',
-      saveAs: { filename ->
-                   if       ( filename.indexOf("pdf") > 0 ) "$filename" 
-				   else null
-              }
+    tag "${sample_id}-${index}-bs_conversion"
+    label "process_medium"
 
-   input:
-   tuple val(sample_type), val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
+    publishDir "${params.outdir}/bismark/${sample_id}/${index}", mode: 'copy',
+        saveAs: { filename ->
+                    if ( filename.indexOf("pdf") > 0 ) "$filename" 
+                    else null
+                }
 
-   output:
-   tuple val(sample_id), val(index), file("*pdf") into ch_bs_conversion
-   
-   when: $sample_type =~ "bismark"
+    input:
+        tuple val(sample_type), val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
 
-   script:
-   """
-   bs_conversion_assessment.R ${sample_id}-${index}
-   """
-   }
+    output:
+        tuple val(sample_id), val(index), file("*pdf") into ch_bs_conversion
+
+    when: $sample_type =~ "bismark"
+
+    script:
+    """
+    bs_conversion_assessment.R ${sample_id}-${index}
+    """
+    }
 
 /*
  * STEP 6 - MultiQC
