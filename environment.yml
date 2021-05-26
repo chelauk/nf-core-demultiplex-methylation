@@ -6,15 +6,15 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - conda-forge::markdown=3.1.1
-  - conda-forge::pygments=2.5.2
-  - conda-forge::pymdown-extensions=6.0
-  - conda-forge::python=3.7.3
-  - conda-forge::r-base=3.5.1
-  - conda-forge::r-essentials=3.5.1
-  - bioconda::bismark=0.22.1
-  - bioconda::bowtie2=2.3.5.1
-  - bioconda::fastqc=0.11.8
-  - bioconda::multiqc=1.9
+  - conda-forge::markdown=3.3.4
+  - conda-forge::pygments=2.9.0
+  - conda-forge::pymdown-extensions=8.2
+  - conda-forge::python=3.9.4
+  - conda-forge::r-base=4.1.0
+  - conda-forge::r-essentials=4.0
+  - bioconda::bismark=0.23.0
+  - bioconda::bowtie2=2.4.4
+  - bioconda::fastqc=0.11.9
+  - bioconda::multiqc=1.10.1
   - bioconda::perl-gdgraph
-  - bioconda::samtools=1.10
+  - bioconda::samtools=1.12

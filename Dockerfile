@@ -1,4 +1,4 @@
-FROM nfcore/base:1.9
+FROM nfcore/base:1.14
 LABEL authors="chela" \
       description="Docker image containing all software requirements for the nf-core/demultiplex pipeline"
 
