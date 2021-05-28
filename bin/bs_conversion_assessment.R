@@ -1,4 +1,4 @@
-#!/opt/conda/envs/nf-core-demultiplex-1.0dev/bin//Rscript --vanilla
+#!/usr/bin/env Rscript --vanilla
 args = commandArgs(trailingOnly=TRUE)
 # library ggplot2
 library("ggplot2")
