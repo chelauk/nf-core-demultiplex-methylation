@@ -507,7 +507,6 @@ process bs_conversion {
 process multiqc {
 
     label 'process_low'
-    conda '/data/scratch/DMP/UCEC/EVGENMOD/cjames/.conda/envs/multiqc1.10'
     publishDir "${params.outdir}/MultiQC", mode: 'copy'
 
     input:
@@ -542,7 +541,6 @@ process multiqc {
 process output_documentation {
 
     label 'process_low'
-    conda '/data/scratch/DMP/UCEC/EVGENMOD/cjames/.conda/envs/py3.9' 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
