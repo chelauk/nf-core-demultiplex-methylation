@@ -152,8 +152,6 @@ process get_software_versions {
     output:
     file 'software_versions_mqc.yaml' into ch_software_versions_yaml
     file "software_versions.csv"
-    
-    when: params.versions
 
     script:
     """
@@ -489,10 +487,10 @@ process bs_conversion {
                 }
 
     input:
-        tuple val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
+        tuple val(sample_type), val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
 
     output:
-        tuple val(sample_id), val(index), file("*pdf") into ch_bs_conversion
+        tuple val(sample_type), val(sample_id), val(index), file("*pdf") into ch_bs_conversion
 
     when: $sample_type =~ "bismark"
 
