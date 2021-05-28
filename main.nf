@@ -102,7 +102,7 @@ summary['Meth ref dir']     = params.methylated_refdir
 summary['Unmeth ref dir']   = params.unmethylated_refdir
 summary['Launch dir']       = workflow.launchDir
 summary['Working dir']      = workflow.workDir
-summary['Script dir']       = workflow.projectDir
+//summary['Script dir']       = workflow.projectDir
 summary['User']             = workflow.userName
 summary['Config Profile'] = workflow.profile
 if (params.config_profile_description) summary['Config Description'] = params.config_profile_description
@@ -331,7 +331,7 @@ process bismark {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
+    bismark \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_test
     """
     }
@@ -363,7 +363,7 @@ process bismark_methylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
+    bismark \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_meth_ctrl
     """
 }
@@ -395,7 +395,7 @@ process bismark_unmethylated {
     R1 = "${reads[0]}"
     R2 = "${reads[1]}"
     """
-    bismark --path_to_bowtie2 /opt/software/applications/anaconda/3/envs/bismark0.22.3/bin \\
+    bismark \\
     --unmapped $genome -1 $R1 -2 $R2 --basename ${sample_id}_${index}_unmeth_ctrl 
     """
 }
@@ -409,7 +409,6 @@ process bismark_extract {
 
     tag "${sample_id}-${index}-methylation"
     label "process_medium"
-    conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
 
     publishDir "${params.outdir}/bismark/methylation_extract/${sample_id}/${index}", pattern: '*_test_pe*', mode: 'copy',
         saveAs: { filename ->
@@ -455,12 +454,12 @@ process bismark_extract {
                 }
 
     input:
-        tuple val(sample_type), val(sample_id), val(index), file(bam) from ch_bismark_align
+        tuple val(sample_id), val(index), file(bam) from ch_bismark_align
 
     output:
-        tuple val(sample_type), val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
-        tuple val(sample_type), val(sample_id), val(index), file("*pe.txt"), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
-        tuple val(sample_type), val(sample_id), val(index), file("*{report,M-bias}.txt") into ch_methylation_extract_qc
+        tuple val(sample_id), val(index), file("CHH_OB_*"), file("CHG_OB_*"), file("CpG_OB_*") into ch_methylation_extract
+        tuple val(sample_id), val(index), file("*pe.txt"), file("*png"), file("*bedGraph.gz"), file("*cov.gz") into ch_methylation_extract_res
+        tuple val(sample_id), val(index), file("*{report,M-bias}.txt") into ch_methylation_extract_qc
 
     script:
     """
@@ -484,12 +483,10 @@ process bs_conversion {
                 }
 
     input:
-        tuple val(sample_type), val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
+        tuple val(sample_id), val(index), file(CHH_OB), file(CHG_OB), file(CpG_OB) from ch_methylation_extract
 
     output:
         tuple val(sample_id), val(index), file("*pdf") into ch_bs_conversion
-
-    when: $sample_type =~ "bismark"
 
     script:
     """
@@ -539,7 +536,7 @@ process multiqc {
 process output_documentation {
 
     label 'process_low'
-    
+    conda '/data/scratch/DMP/UCEC/EVGENMOD/cjames/.conda/envs/py3.9' 
     publishDir "${params.outdir}/pipeline_info", mode: 'copy'
 
     input:
