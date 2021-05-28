@@ -492,7 +492,8 @@ process bs_conversion {
     output:
         tuple val(sample_type), val(sample_id), val(index), file("*pdf") into ch_bs_conversion
 
-    when: $sample_type =~ "bismark"
+    when:
+        sample_type == "bismark"
 
     script:
     """
