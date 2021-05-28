@@ -475,7 +475,7 @@ process bismark_extract {
  * STEP 5 - bs_conversion assessment
  */
 
-ch_methylation_extract.ch_methylation_extract.dump(tag: 'methylation')
+ch_methylation_extract = ch_methylation_extract.dump(tag: 'methylation')
 
 process bs_conversion {
 
