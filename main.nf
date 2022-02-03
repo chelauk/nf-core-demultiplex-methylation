@@ -10,7 +10,6 @@ https://github.com/nf-core/demultiplex
 */
 
 def helpMessage() {
-    // TODO nf-core: Add to this help message with new command line parameters
     log.info nfcoreHeader()
     log.info"""
 
@@ -82,15 +81,9 @@ params.unmethylated_refdir = workflow.projectDir + '/genome/RRBS_unmethylated_co
  * Create a channel for input read files
  */
 
-if (!params.demultiplex) {
-    ch_read_files_fastq = Channel
+ch_read_files_fastq = Channel
     .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
     .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-} else {
-    ch_read_files_split = Channel
-    .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
-    .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-}
 
 // Header log info
 log.info nfcoreHeader()
@@ -171,87 +164,8 @@ process get_software_versions {
     """
 }
 
-// split ch_read_files_fastq for trim and qc
-(ch_read_files_fastq, ch_trim_fastq) = ch_read_files_fastq.into(2)
-(ch_demultiplex, ch_demultiplex_2) = ch_demultiplex.into(2)
-ch_read_files_fastq = ch_read_files_fastq.mix(ch_demultiplex)
-ch_trim_fastq = ch_trim_fastq.mix(ch_demultiplex_2)
- /*
- * STEP 1 - FastQC
- */
-
-process fastqc {
-    tag "$name"
-    label 'process_medium'
-    publishDir "${params.outdir}/fastqc", mode: 'copy',
-        saveAs: { filename ->
-                    filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
-                }
-
-    input:
-    set val(name), file(reads) from ch_read_files_fastq
-
-    output:
-    file "*_fastqc.{zip,html}" into ch_fastqc_results
-
-    script:
-    """
-    fastqc --quiet --threads $task.cpus $reads
-    """
-}
-
 /*
- * STEP 1.5
- */
-if (ch_indexed) {
-    ch_trim_fastq = ch_trim_fastq
-                    .map { prefix, file -> tuple(getTRIMSampleID(prefix), getTRIMIndexID(prefix),file) }
-    } else {
-    ch_trim_fastq = ch_trim_fastq
-                    .map { prefix, file -> tuple(prefix, "index" ,file) }
-    }
-
-def getTRIMSampleID( prefix ){
-     // using RegEx to extract the SampleID
-    regexpPE = /([A-Z]+)-[a-z0-9-_]+S[0-9]+./
-    (prefix =~ regexpPE)[0][1]
-}
-
-    def getTRIMIndexID( prefix ){
-     // using RegEx to extract the IndexID
-    regexpPE = /[A-Z]+-([a-z0-9-_]+S[0-9]+).+/
-    (prefix  =~ regexpPE)[0][1]
-}
-
-process trimGalore {
-    tag  "${sample_id}-demultiplex"
-    label "process_medium"
-    conda '/opt/software/applications/anaconda/3/envs/trim-galore0.6.6'
-    publishDir "${params.outdir}/trimming", mode: 'copy',
-        saveAs: { filename ->
-                    filename.indexOf(".txt") > 0 ? "$filename" : "$filename"
-                }
-    
-    input:
-        tuple val(sample_id), val(index), file(reads) from ch_trim_fastq
-
-    output:
-        tuple val(sample_id), val(index), file("*fq.gz") into ch_trim_out
-        file("*txt") into ch_trimming_report
-
-    when:
-        params.trim
-
-    script:
-    fq1 = "${reads[0]}"
-    fq2 = "${reads[1]}"
-    """
-    trim_galore --paired --rrbs $fq1 $fq2 --basename ${sample_id}_${index}
-    """
-}
-
-/*
- * STEP 2 - Demultiplex
+ * STEP 1 - Demultiplex
  */
 
 process demultiplex {
@@ -266,10 +180,10 @@ process demultiplex {
         }
 
     input:
-        tuple val(sample_id), file(reads) from ch_read_files_split
+        tuple val(sample_id), file(reads) from ch_read_files_fastq
 
     output:
-        file("*_R[12].fastq.[ATGC]*.fastq") into ch_demultiplex
+        file("*_R[12]_001.fastq.[ATGC]*.fastq") into ch_demultiplex
         set file("*counts"), file("*hiCounts"), file("*summ") into demultiplex_log 
 
     when: params.demultiplex
@@ -291,19 +205,77 @@ ch_demultiplex = ch_demultiplex
 
 def getIndex( file ){
      // using RegEx to extract the SampleID
-    regexpPE = /.+_R[12].fastq.([ATGC]{6}).fastq/
+    regexpPE = /.+_R[12]_001.fastq.([ATGC]{6}).fastq/
     (file =~ regexpPE)[0][1]
 }
 
 def getSampleID( file ){
      // using RegEx to extract the SampleID
-    regexpPE = /.+\/([\w_\-]+)_R[12].fastq.[ATGC]{6}.fastq/
+    regexpPE = /.+\/([\w_\-]+)_R[12]_001.fastq.[ATGC]{6}.fastq/
     (file =~ regexpPE)[0][1]
+}
+ch_demultiplex = ch_demultiplex.dump(tag:"demultiplex")
+(ch_fastqc,ch_trim_fastq) =  ch_demultiplex.into(2)
+ /*
+ * STEP 1 - FastQC
+ */
+
+process fastqc {
+    tag "$name"
+    label 'process_medium'
+    publishDir "${params.outdir}/fastqc", mode: 'copy',
+        saveAs: { filename ->
+                    filename.indexOf(".zip") > 0 ? "zips/$filename" : "$filename"
+                }
+
+    input:
+    set val(name), val(index), file(reads) from ch_fastqc
+
+    output:
+    file "*_fastqc.{zip,html}" into ch_fastqc_results
+
+    script:
+    """
+    fastqc --quiet --threads $task.cpus $reads
+    """
+}
+
+/*
+ * STEP 1.5
+ */
+
+process trimGalore {
+    tag  "${sample_id}-demultiplex"
+    label "process_medium"
+    conda '/opt/software/applications/anaconda/3/envs/trim-galore0.6.6'
+    publishDir "${params.outdir}/trimming", mode: 'copy',
+        saveAs: { filename ->
+                    filename.indexOf(".txt") > 0 ? "$filename" : "$filename"
+                }
+    
+    input:
+        tuple val(sample_id), val(index), file(reads) from ch_trim_fastq
+
+    output:
+        tuple val(sample_id), val(index), file("*fq") into ch_trim_out
+        file("*txt") into ch_trimming_report
+
+    when:
+        params.trim
+
+    script:
+    fq1 = "${reads[0]}"
+    fq2 = "${reads[1]}"
+    """
+    trim_galore --paired --rrbs $fq1 $fq2 --basename ${sample_id}_${index}
+    """
 }
 
 
+
+
 // split into three for controls
-(ch_fastq_main, ch_fastq_unmethylated_control, ch_fastq_methylated_control) = ch_fastq_main.into(3)
+(ch_fastq_main, ch_fastq_unmethylated_control, ch_fastq_methylated_control) = ch_trim_out.into(3)
 
 ch_fastq_main = ch_fastq_main.dump(tag: 'fastq_main')
 /*
