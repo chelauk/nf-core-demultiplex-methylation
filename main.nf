@@ -30,8 +30,8 @@ def helpMessage() {
         --methylated_refdir             Location of bismark methylated reference directory
         --unmethylated_refdir           Location of bismark unmethylated reference directory
         --demultiplex                   [bool] demultiplex script
-        --trim                          [bool] trim with skewer
-        --indexed						  [bool] are the files indexed?
+        --trim                          [bool] trim with trimGalore
+        --indexed                       [bool] are the files indexed?
 
     Other options:
         --outdir [file]                 The output directory where the results will be saved
@@ -97,7 +97,6 @@ log.info nfcoreHeader()
 def summary = [:]
 if (workflow.revision) summary['Pipeline Release'] = workflow.revision
 summary['Run Name']         = custom_runName ?: workflow.runName
-// TODO nf-core: Report custom parameters here
 summary['Reads']            = params.reads
 summary['Max Resources']    = "$params.max_memory memory, $params.max_cpus cpus, $params.max_time time per job"
 if (workflow.containerEngine) summary['Container'] = "$workflow.containerEngine - $workflow.container"
@@ -177,6 +176,7 @@ process get_software_versions {
 (ch_demultiplex, ch_demultiplex_2) = ch_demultiplex.into(2)
 ch_read_files_fastq = ch_read_files_fastq.mix(ch_demultiplex)
 ch_trim_fastq = ch_trim_fastq.mix(ch_demultiplex_2)
+ /*
  * STEP 1 - FastQC
  */
 
