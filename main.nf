@@ -73,7 +73,7 @@ params.methylated_refdir   = workflow.projectDir + '/genome/RRBS_methylated_cont
 params.unmethylated_refdir = workflow.projectDir + '/genome/RRBS_unmethylated_control'
 file("${params.outdir}/no_file").text = "no_file\n"
 
-include {SAMPLESHEET_CHECK}     from 'modules/local/process/samplesheet_check'
+include {SAMPLESHEET_CHECK}     from './modules/nf-core/software/'
 include { FASTQC }              from 'modules/nf-core/software/fastqc/main'
 
 /*
