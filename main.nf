@@ -53,7 +53,7 @@ if (params.help) {
     exit 0
 }
 /*
- * intitiate params
+ * initiate params
  */
 
 ch_indexed = params.indexed ? Channel.value(params.indexed): null
@@ -82,10 +82,15 @@ params.unmethylated_refdir = workflow.projectDir + '/genome/RRBS_unmethylated_co
  * Create a channel for input read files
  */
 
-Channel
+if (!params.demultiplex) {
+    ch_read_files_fastq = Channel
     .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
     .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
-    .into { ch_read_files_fastqc; ch_read_files_split }
+} else {
+    ch_read_files_split = Channel
+    .fromFilePairs(params.reads, size: params.single_end ? 1 : 2)
+    .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}\nNB: Path needs to be enclosed in quotes!\nIf this is single-end data, please specify --single_end on the command line." }
+}
 
 // Header log info
 log.info nfcoreHeader()
@@ -167,10 +172,11 @@ process get_software_versions {
     """
 }
 
-// split ch_read_files_fastqc for trim and qc
-(ch_read_files_fastqc, ch_trim_fastqc) = ch_read_files_fastqc.into(2)
-
-/*
+// split ch_read_files_fastq for trim and qc
+(ch_read_files_fastq, ch_trim_fastq) = ch_read_files_fastq.into(2)
+(ch_demultiplex, ch_demultiplex_2) = ch_demultiplex.into(2)
+ch_read_files_fastq = ch_read_files_fastq.mix(ch_demultiplex)
+ch_trim_fastq = ch_trim_fastq.mix(ch_demultiplex_2)
  * STEP 1 - FastQC
  */
 
@@ -183,7 +189,7 @@ process fastqc {
                 }
 
     input:
-    set val(name), file(reads) from ch_read_files_fastqc
+    set val(name), file(reads) from ch_read_files_fastq
 
     output:
     file "*_fastqc.{zip,html}" into ch_fastqc_results
@@ -198,10 +204,10 @@ process fastqc {
  * STEP 1.5
  */
 if (ch_indexed) {
-    ch_trim_fastqc = ch_trim_fastqc
+    ch_trim_fastq = ch_trim_fastq
                     .map { prefix, file -> tuple(getTRIMSampleID(prefix), getTRIMIndexID(prefix),file) }
     } else {
-    ch_trim_fastqc = ch_trim_fastqc
+    ch_trim_fastq = ch_trim_fastq
                     .map { prefix, file -> tuple(prefix, "index" ,file) }
     }
 
@@ -227,7 +233,7 @@ process trimGalore {
                 }
     
     input:
-        tuple val(sample_id), val(index), file(reads) from ch_trim_fastqc
+        tuple val(sample_id), val(index), file(reads) from ch_trim_fastq
 
     output:
         tuple val(sample_id), val(index), file("*fq.gz") into ch_trim_out
@@ -278,7 +284,7 @@ process demultiplex {
     """
 }
 
-ch_demultiplex= ch_demultiplex
+ch_demultiplex = ch_demultiplex
                     .flatten()
                     .map{file -> tuple(getSampleID(file), getIndex(file),file) }
                     .groupTuple(by:[1,0])
@@ -296,8 +302,6 @@ def getSampleID( file ){
 }
 
 
-// include trim output 
-ch_fastq_main = ch_demultiplex.mix(ch_trim_out)
 // split into three for controls
 (ch_fastq_main, ch_fastq_unmethylated_control, ch_fastq_methylated_control) = ch_fastq_main.into(3)
 
