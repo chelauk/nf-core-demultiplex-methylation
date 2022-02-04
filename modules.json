@@ -3,6 +3,12 @@
     "homePage": "https://github.com/nf-core/demultiplex",
     "repos": {
         "nf-core/modules": {
+            "bismark/align": {
+                "git_sha": "e20e57f90b6787ac9a010a980cf6ea98bd990046"
+            },
+            "bismark/methylationextractor": {
+                "git_sha": "e20e57f90b6787ac9a010a980cf6ea98bd990046"
+            },
             "custom/dumpsoftwareversions": {
                 "git_sha": "e20e57f90b6787ac9a010a980cf6ea98bd990046"
             },

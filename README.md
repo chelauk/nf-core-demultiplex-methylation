@@ -25,12 +25,25 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 On release, automated continuous integration tests run the pipeline on a full-sized dataset on the AWS cloud infrastructure. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from the full-sized test can be viewed on the [nf-core website](https://nf-co.re/demultiplex/results).
 
 ## Pipeline summary
+Reduced representation bisulfite sequencing (RRBS) is a method to study DNA methylation on a genome-wide scale at
+single-nucleotide resolution. RRBS is a variation of whole genome bisulfite conversion sequencing that uses restriction
+enzyme digestion and DNA size selection to focus the analysis on a subset of the genome where the majority of the DNA
+methylation occurs. Focusing on this portion of the genome generates a genome-wide DNA methylation data set at a lower DNA
+sequencing cost than WGBS.
 
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->
+The principle of RRBS is to focus coverage on the regions of the genome containing CpG dinucleotides, which are the primary
+sites of DNA methylation, instead of the whole genome, to reduce sequencing requirements and cost.
 
-1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
-2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
-
+1. Demultiplex if necessary ([`Demultiplex`](https://github.com/GaitiLab/scRRBS_pipeline/blob/main/splitFastqPair.pl))
+2. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
+3. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+4. Trim using RRBS specific flags with TrimGalore ([`Trim Galore`](https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/))
+5. Align to reference genome with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
+6. Align to fully methylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
+7. Align to unmethylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
+8. Bismark methylation extractor ([`bismark`](https://github.com/FelixKrueger/Bismark/))
+9. Bisulphite conversion assessment
+10. Post alignment QC
 ## Quick Start
 
 1. Install [`Nextflow`](https://www.nextflow.io/docs/latest/getstarted.html#installation) (`>=21.10.3`)
