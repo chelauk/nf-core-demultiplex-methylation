@@ -283,7 +283,6 @@ ch_fastq_main = ch_fastq_main.dump(tag: 'fastq_main')
  */
 
 process bismark {
-
     tag "${sample_id}-bismark"
     conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
     label "process_medium"
@@ -320,7 +319,7 @@ process bismark {
 
 process bismark_methylated {
 
-    tag "${sample_id}-bismark"
+    tag "${sample_id}-bismark_methylated"
     label "process_medium"
     conda '/opt/software/applications/anaconda/3/envs/bismark0.22.3'
 
