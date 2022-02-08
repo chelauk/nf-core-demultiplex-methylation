@@ -258,8 +258,8 @@ process trimGalore {
 
     output:
         tuple val(sample_id), val(index), file("*fq") into ch_trim_out
-        file("*txt") into ch_trimming_report
-
+        file("*{txt,zip,html}") into ch_trimming_report
+        
     when:
         params.trim
 
@@ -267,7 +267,7 @@ process trimGalore {
     fq1 = "${reads[0]}"
     fq2 = "${reads[1]}"
     """
-    trim_galore --paired --rrbs $fq1 $fq2 --basename ${sample_id}_${index}
+    trim_galore --paired --rrbs $fq1 $fq2 --fastqc --basename ${sample_id}_${index}
     """
 }
 
