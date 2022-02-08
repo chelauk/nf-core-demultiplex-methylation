@@ -17,8 +17,9 @@ nextflow.enable.dsl = 2
 ========================================================================================
 */
 
+params.bismark = WorkflowMain.getGenomeAttribute(params, 'bismark')
 params.fasta = WorkflowMain.getGenomeAttribute(params, 'fasta')
-
+// this refers to a groovy function defined in lib/WorkflowMain.groovy
 /*
 ========================================================================================
     VALIDATE & PRINT PARAMETER SUMMARY
