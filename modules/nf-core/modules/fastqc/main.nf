@@ -44,4 +44,13 @@ process FASTQC {
         END_VERSIONS
         """
     }
+    stub:
+    def args = task.ext.args ?: ''
+    // Add soft-links to original FastQs for consistent naming in pipeline
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.html
+    touch ${prefix}.zip
+    touch versions.yml
+    """
 }

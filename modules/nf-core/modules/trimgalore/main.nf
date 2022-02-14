@@ -60,8 +60,6 @@ process TRIMGALORE {
         """
     } else {
         """
-        [ ! -f  ${prefix}_1.fastq.gz ] && ln -s ${reads[0]} ${prefix}_1.fastq.gz
-        [ ! -f  ${prefix}_2.fastq.gz ] && ln -s ${reads[1]} ${prefix}_2.fastq.gz
         trim_galore \\
             $args \\
             --cores $cores \\
@@ -73,14 +71,15 @@ process TRIMGALORE {
             $c_r2 \\
             $tpc_r1 \\
             $tpc_r2 \\
-            ${prefix}_1.fastq.gz \\
-            ${prefix}_2.fastq.gz
+            *_1.*fastq \\
+            *_2.*fastq
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
             cutadapt: \$(cutadapt --version)
         END_VERSIONS
         """
+    }
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
@@ -88,7 +87,7 @@ process TRIMGALORE {
     touch ${prefix}_2.fq.gz
     touch ${prefix}.zip
     touch ${prefix}.html
+    touch ${prefix}.report.txt
     touch versions.yml
     """
-    }
 }

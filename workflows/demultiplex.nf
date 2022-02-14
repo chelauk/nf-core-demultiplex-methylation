@@ -9,12 +9,16 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowDemultiplex.initialise(params, log)
 
-def checkPathParamList = [ params.input, params.multiqc_config, params.fasta ]
+def checkPathParamList = [ params.input,
+    params.multiqc_config,
+    params.fasta
+    ]
+
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
 
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
-
+demultiplex = params.demultiplex
 /*
 ========================================================================================
     CONFIG FILES
@@ -44,9 +48,16 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC                      } from '../modules/nf-core/modules/fastqc/main'
+
 include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
+include { CAT_FASTQ                   } from '../modules/nf-core/modules/cat/fastq/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+
+//
+// SUBWORKFLOW: Installed from subworkflow
+//
+
+include { PREP_SAMPLES                } from '../subworkflows/local/prepare_samples.nf'
 
 /*
 ========================================================================================
@@ -64,18 +75,46 @@ workflow DEMULTIPLEX {
     //
     // SUBWORKFLOW: Read in samplesheet, validate and stage input files
     //
-    INPUT_CHECK (
-        ch_input
-    )
+    INPUT_CHECK (ch_input)
+    .reads
+    .map {
+        meta, fastq ->
+            meta.id = meta.id.split('_')[0..-2].join('_')
+            [ meta, fastq ] }
+    .groupTuple(by: [0])
+    .branch {
+        meta, fastq ->
+            single  : fastq.size() == 1
+                return [ meta, fastq.flatten() ]
+            multiple: fastq.size() > 1
+                return [ meta, fastq.flatten() ]
+    }
+    .set { ch_fastq }
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
     //
-    // MODULE: Run FastQC
+    // MODULE: Concatenate FastQ files from same sample if required
     //
-    FASTQC (
-        INPUT_CHECK.out.reads
+    CAT_FASTQ (
+        ch_fastq.multiple
     )
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    .reads
+    .mix(ch_fastq.single)
+    .set { ch_cat_fastq }
+    ch_versions = ch_versions.mix(CAT_FASTQ.out.versions.first().ifEmpty(null))
+
+    //
+    // SUBWORKFLOW: QC and prepare reads for alignment
+    //
+
+    PREP_SAMPLES (
+        ch_cat_fastq,
+        params.skip_fastqc || params.skip_qc,
+        params.skip_trimming,
+        params.skip_demultiplex
+        )
+    ch_versions = ch_versions.mix(PREP_SAMPLES.out.versions)
+    //prepped_reads = PREP_SAMPLES.out.reads
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
@@ -92,7 +131,6 @@ workflow DEMULTIPLEX {
     ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect()
