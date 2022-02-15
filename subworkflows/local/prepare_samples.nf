@@ -34,19 +34,22 @@ workflow PREP_SAMPLES {
     // module: Demultiplex
     //
 
-    counts      = Channel.empty()
-    hiCounts    = Channel.empty()
-    summ        = Channel.empty()
+    counts   = Channel.empty()
+    hiCounts = Channel.empty()
+    summ     = Channel.empty()
     if (!skip_demultiplex) {
         DEMULTIPLEX_FASTQ (reads)
-    }
-    demux_reads = DEMULTIPLEX_FASTQ.out.demultiplex_fastq
-    ch_versions = ch_versions.mix(DEMULTIPLEX_FASTQ.out.versions.first())
+        demux_reads = DEMULTIPLEX_FASTQ.out.demultiplex_fastq
+        counts      = DEMULTIPLEX_FASTQ.out.counts
+        hiCounts    = DEMULTIPLEX_FASTQ.out.hiCounts
+        summ        = DEMULTIPLEX_FASTQ.out.summ
+        ch_versions = ch_versions.mix(DEMULTIPLEX_FASTQ.out.versions.first())
+        }
 
     if (!skip_demultiplex) {
-        trim_reads = reads
-        }else{
         trim_reads = demux_reads
+        }else{
+        trim_reads = reads
         }
 
     trim_html  = Channel.empty()

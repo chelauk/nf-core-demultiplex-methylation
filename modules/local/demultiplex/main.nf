@@ -12,10 +12,10 @@ process DEMULTIPLEX_FASTQ {
 
     output:
     tuple val(meta), path("*{[ATGC],[ATGC],[ATGC],[ATGC],[ATGC],[ATGC]}.fastq"), emit: demultiplex_fastq
-    tuple val(meta), path("*counts"),          emit: demultiplex_counts
-    tuple val(meta), path("*hiCounts"),        emit: dumultiplex_hiCounts
-    tuple val(meta), path("*summ"),            emit: demultiplex_summ
-    path  "versions.yml",                      emit: versions
+    tuple val(meta), path("*counts"),   optional:true, emit: counts
+    tuple val(meta), path("*hiCounts"), optional:true, emit: hiCounts
+    tuple val(meta), path("*summ"),     optional:true, emit: summ
+    path  "versions.yml",               optional:true, emit: versions
 
     when:
     task.ext.when == null || task.ext.when

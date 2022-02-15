@@ -36,4 +36,14 @@ process BISMARK_ALIGN {
         bismark: \$(echo \$(bismark -v 2>&1) | sed 's/^.*Bismark Version: v//; s/Copyright.*\$//')
     END_VERSIONS
     """
+    stub:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    def fastq      = meta.single_end ? reads : "-1 ${reads[0]} -2 ${reads[1]}"
+    """
+    touch ${meta.id}.bam
+    touch ${meta.id}.report.txt
+    touch versions.yml
+    """
+
 }

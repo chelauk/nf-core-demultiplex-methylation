@@ -11,7 +11,10 @@ WorkflowDemultiplex.initialise(params, log)
 
 def checkPathParamList = [ params.input,
     params.multiqc_config,
-    params.fasta
+    params.fasta,
+    params.bismark_refdir,
+    params.methylated_control,
+    params.unmethylated_control
     ]
 
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -58,7 +61,7 @@ include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/
 //
 
 include { PREP_SAMPLES                } from '../subworkflows/local/prepare_samples.nf'
-
+include { METHYLATION                 } from '../subworkflows/local/methylation.nf'
 /*
 ========================================================================================
     RUN MAIN WORKFLOW
@@ -114,7 +117,16 @@ workflow DEMULTIPLEX {
         params.skip_demultiplex
         )
     ch_versions = ch_versions.mix(PREP_SAMPLES.out.versions)
-    //prepped_reads = PREP_SAMPLES.out.reads
+
+    prepped_reads = PREP_SAMPLES.out.reads
+    //
+    // run Methylation analysis
+    //
+    METHYLATION (prepped_reads,
+                params.bismark_refdir,
+                params.methylated_control,
+                params.unmethylated_control
+                )
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
