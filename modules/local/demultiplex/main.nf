@@ -4,8 +4,8 @@ process DEMULTIPLEX_FASTQ {
 
     conda (params.enable_conda ? "conda-forge::perl=5.26.2" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/perl=5.26.2' :
-        'quay.io/biocontainers/perl=5.26.2' }"
+        'https://depot.galaxyproject.org/singularity/perl:5.26.2' :
+        'quay.io/biocontainers/perl:5.26.2' }"
 
     input:
     tuple val(meta), path(reads)
@@ -27,8 +27,8 @@ process DEMULTIPLEX_FASTQ {
     """
     [ ! -f  ${prefix}_1.fastq.gz ] && ln -s ${reads[0]} ${prefix}_1.fastq.gz
     [ ! -f  ${prefix}_2.fastq.gz ] && ln -s ${reads[1]} ${prefix}_2.fastq.gz
-    gzip ${prefix}_1.fastq.gz
-    gzip ${prefix}_2.fastq.gz
+    gunzip ${prefix}_1.fastq.gz
+    gunzip ${prefix}_2.fastq.gz
     splitFastqPair.pl ${prefix}_1.fastq ${prefix}_2.fastq
     """
 
