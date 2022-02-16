@@ -45,6 +45,8 @@ workflow PREP_SAMPLES {
         summ        = DEMULTIPLEX_FASTQ.out.summ
         ch_versions = ch_versions.mix(DEMULTIPLEX_FASTQ.out.versions.first())
         }
+    demux_reads = demux_reads
+                        .groupTuple()
 
     if (!skip_demultiplex) {
         trim_reads = demux_reads
