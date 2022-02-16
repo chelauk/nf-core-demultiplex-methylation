@@ -1,11 +1,11 @@
 process BISMARK_CONVERSION {
     tag "$meta.id"
-    label 'process_high'
+    label 'process_low'
 
-    conda (params.enable_conda ? "bioconda::bismark=0.23.0" : null)
+    conda (params.enable_conda ? "r::tidverse=1.2.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bismark:0.23.0--0' :
-        'quay.io/biocontainers/bismark:0.23.0--0' }"
+        'https://depot.galaxyproject.org/singularity/r-tidyverse:1.2.1' :
+        'quay.io/biocontainers/r-tidyverse:1.2.1' }"
 
     input:
     tuple val(meta), path(chh_ob)
@@ -23,7 +23,7 @@ process BISMARK_CONVERSION {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def fastq      = meta.single_end ? reads : "-1 ${reads[0]} -2 ${reads[1]}"
     """
-    bs_conversion_assessment.R ${sample_id}-${index}
+    bs_conversion_assessment.R
     """
     stub:
     """
