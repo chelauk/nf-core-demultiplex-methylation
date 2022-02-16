@@ -45,8 +45,17 @@ workflow PREP_SAMPLES {
         summ        = DEMULTIPLEX_FASTQ.out.summ
         ch_versions = ch_versions.mix(DEMULTIPLEX_FASTQ.out.versions.first())
         }
-    demux_reads = demux_reads
-                        .groupTuple()
+
+        demux_reads = demux_reads
+                    .map{meta.id,file  -> tuple(getSampleID(file),file) }
+                    .groupTuple()
+                    .view()
+
+def getSampleID( file ){
+     // using RegEx to extract the SampleID
+    regexpPE = /.+\/([\w_\-]+_R[12]_001.fastq.[ATGC]{6}).fastq/
+    (file =~ regexpPE)[0][1]
+}
 
     if (!skip_demultiplex) {
         trim_reads = demux_reads
