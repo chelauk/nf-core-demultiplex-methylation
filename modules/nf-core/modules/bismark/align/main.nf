@@ -28,7 +28,7 @@ process BISMARK_ALIGN {
     bismark \\
         --unmapped \\
         $fastq \\
-        --basename ${meta}_${args} \\
+        --basename ${meta.id}_${args} \\
         --genome $index 
 
     cat <<-END_VERSIONS > versions.yml
