@@ -11,7 +11,7 @@ process DEMULTIPLEX_FASTQ {
     tuple val(meta), path(reads)
 
     output:
-    tuple val(meta), path("*{[ATGC],[ATGC],[ATGC],[ATGC],[ATGC],[ATGC]}.fastq"), emit: demultiplex_fastq
+    path("*{[ATGC],[ATGC],[ATGC],[ATGC],[ATGC],[ATGC]}.fastq"), emit: demultiplex_fastq
     tuple val(meta), path("*counts"),   optional:true, emit: counts
     tuple val(meta), path("*hiCounts"), optional:true, emit: hiCounts
     tuple val(meta), path("*summ"),     optional:true, emit: summ

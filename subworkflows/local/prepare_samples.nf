@@ -11,6 +11,20 @@ include { TRIMGALORE       } from '../../modules/nf-core/modules/trimgalore/main
 
 include { DEMULTIPLEX_FASTQ           } from '../../modules/local/demultiplex/main'
 
+//
+// functions to get demultiplexed ids
+//
+
+def getSampleID( file ){
+     // using RegEx to extract the SampleID
+    regexpPE = /.+\/([\w_\-]+)_[12].fastq.[ATGC]{6}.fastq/
+    (file =~ regexpPE)[0][1]
+}
+def getIndex( file ){
+     // using RegEx to extract the SampleID
+    regexpPE = /.+_[12].fastq.([ATGC]{6}).fastq/
+    (file =~ regexpPE)[0][1]
+}
 
 workflow PREP_SAMPLES {
     take:
@@ -47,15 +61,9 @@ workflow PREP_SAMPLES {
         }
 
         demux_reads = demux_reads
-                    .map{meta.id,file  -> tuple(getSampleID(file),file) }
-                    .groupTuple()
-                    .view()
-
-def getSampleID( file ){
-     // using RegEx to extract the SampleID
-    regexpPE = /.+\/([\w_\-]+_R[12]_001.fastq.[ATGC]{6}).fastq/
-    (file =~ regexpPE)[0][1]
-}
+                        .map { it -> [getSampleID(it) + "_" +  getIndex(it), it] }
+                        .groupTuple(by:[0])
+                        .view()
 
     if (!skip_demultiplex) {
         trim_reads = demux_reads
