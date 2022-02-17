@@ -17,15 +17,10 @@ include { DEMULTIPLEX_FASTQ           } from '../../modules/local/demultiplex/ma
 
 def create_fastq_channels_dem(row) {
     def meta = [:]
-    meta.id           = row[0]
-    meta.single_end   = false
+    meta.id  = row[0]
 
     def array = []
-    if (meta.single_end) {
-        array = [ meta, [ row[1] ] ]
-    } else {
         array = [ meta, [ row[1][0], row[1][1] ] ]
-    }
     return array
 }
 
