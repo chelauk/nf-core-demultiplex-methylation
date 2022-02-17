@@ -15,6 +15,26 @@ include { DEMULTIPLEX_FASTQ           } from '../../modules/local/demultiplex/ma
 // functions to get demultiplexed ids
 //
 
+def create_fastq_channels_dem(row) {
+    def meta = [:]
+    meta.id           = row[0]
+    meta.single_end   = false
+
+    def array = []
+    //if (!file(row.fastq_1).exists()) {
+    //    exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
+    //}
+    if (meta.single_end) {
+        array = [ meta, [ file(row[1]) ] ]
+    } else {
+   //     if (!file(row.fastq_2).exists()) {
+   //         exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
+   //    }
+        array = [ meta, [ file(row[1][0]), file(row[1][1]) ] ]
+    }
+    return array
+}
+
 def getSampleID( file ){
      // using RegEx to extract the SampleID
     regexpPE = /.+\/([\w_\-]+)_[12].fastq.[ATGC]{6}.fastq/
@@ -63,6 +83,7 @@ workflow PREP_SAMPLES {
         demux_reads = demux_reads
                         .map { it -> [getSampleID(it) + "_" +  getIndex(it), it] }
                         .groupTuple(by:[0])
+                        .map{ it -> create_fastq_channels_dem(it) }
                         .view()
 
     if (!skip_demultiplex) {
