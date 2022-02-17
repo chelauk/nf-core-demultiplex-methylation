@@ -21,16 +21,10 @@ def create_fastq_channels_dem(row) {
     meta.single_end   = false
 
     def array = []
-    if (!file(row[1][0]).exists()) {
-        exit 1, "ERROR: Please check input samplesheet -> Read 1 FastQ file does not exist!\n${row.fastq_1}"
-    }
     if (meta.single_end) {
-        array = [ meta, [ file(row[1]) ] ]
+        array = [ meta, [ row[1] ] ]
     } else {
-        if (!file(row[1][1]).exists()) {
-            exit 1, "ERROR: Please check input samplesheet -> Read 2 FastQ file does not exist!\n${row.fastq_2}"
-        }
-        array = [ meta, [ file(row[1][0]), file(row[1][1]) ] ]
+        array = [ meta, [ row[1][0], row[1][1] ] ]
     }
     return array
 }
