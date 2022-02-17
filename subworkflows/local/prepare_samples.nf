@@ -20,19 +20,17 @@ def create_fastq_channels_dem(row) {
     meta.id  = row[0]
 
     def array = []
-        array = [ meta, [ row[1][0], row[1][1] ] ]
+        array = [ meta, [ file(row[1][0]), file(row[1][1]) ] ]
     return array
 }
 
-def getSampleID( file ){
+def get_sample_id ( file ){
      // using RegEx to extract the SampleID
-    regexpPE = /.+\/([\w_\-]+)_[12].fastq.[ATGC]{6}.fastq/
-    (file =~ regexpPE)[0][1]
-}
-def getIndex( file ){
-     // using RegEx to extract the SampleID
-    regexpPE = /.+_[12].fastq.([ATGC]{6}).fastq/
-    (file =~ regexpPE)[0][1]
+    sample_regex = /.+\/([\w_\-]+)_[12].fastq.[ATGC]{6}.fastq/
+    sample_id    = (file =~ sample_regex)[0][1]
+    index_regex  = /.+_[12].fastq.([ATGC]{6}).fastq/
+    index_id     = (file =~ index_regex)[-1][1]
+    return sample_id + "_" + index_id
 }
 
 workflow PREP_SAMPLES {
@@ -70,10 +68,11 @@ workflow PREP_SAMPLES {
         }
 
         demux_reads = demux_reads
-                        .map { it -> [getSampleID(it) + "_" +  getIndex(it), it] }
-                        .groupTuple(by:[0])
-                        .map{ it -> create_fastq_channels_dem(it) }
-                        .view()
+        .flatMap()
+        .map{ it -> [get_sample_id(it),it]}
+        .groupTuple()
+        .map{ it -> create_fastq_channels_dem(it) }
+        .view()
 
     if (!skip_demultiplex) {
         trim_reads = demux_reads
