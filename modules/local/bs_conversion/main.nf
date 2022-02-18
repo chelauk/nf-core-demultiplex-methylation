@@ -21,7 +21,6 @@ process BISMARK_CONVERSION {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
-    def fastq      = meta.single_end ? reads : "-1 ${reads[0]} -2 ${reads[1]}"
     """
     bs_conversion_assessment.R ${prefix}
     """
