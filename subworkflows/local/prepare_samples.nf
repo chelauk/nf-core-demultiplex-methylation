@@ -65,34 +65,39 @@ workflow PREP_SAMPLES {
         hiCounts    = DEMULTIPLEX_FASTQ.out.hiCounts
         summ        = DEMULTIPLEX_FASTQ.out.summ
         ch_versions = ch_versions.mix(DEMULTIPLEX_FASTQ.out.versions.first())
-        }
-
         demux_reads = demux_reads
-        .flatMap()
-        .map{ it -> [get_sample_id(it),it]}
-        .groupTuple()
-        .map{ it -> create_fastq_channels_dem(it) }
-        .view()
-
-    if (!skip_demultiplex) {
-        trim_reads = demux_reads
-        }else{
-        trim_reads = reads
+            .flatMap()
+            .map{ it -> [get_sample_id(it),it]}
+            .groupTuple()
+            .map{ it -> create_fastq_channels_dem(it) }
         }
 
     trim_html  = Channel.empty()
     trim_zip   = Channel.empty()
     trim_log   = Channel.empty()
-    if (!skip_trimming) {
-        TRIMGALORE ( trim_reads )
+    if (!skip_trimming && !skip_demultiplex) {
+        TRIMGALORE ( demux_reads )
+        trim_html     = TRIMGALORE.out.html
+        trim_zip      = TRIMGALORE.out.zip
+        trim_log      = TRIMGALORE.out.log
+        prepped_reads = TRIMGALORE.out.reads
+        ch_versions   = ch_versions.mix(TRIMGALORE.out.versions.first())
+    }
+    if (!skip_trimming && skip_demultiplex) {
+        TRIMGALORE ( reads )
         trim_html   = TRIMGALORE.out.html
         trim_zip    = TRIMGALORE.out.zip
         trim_log    = TRIMGALORE.out.log
+        prepped_reads = TRIMGALORE.out.reads
         ch_versions = ch_versions.mix(TRIMGALORE.out.versions.first())
     }
 
+    if (skip_trimming && skip_demultiplex) {
+        prepped_reads = reads
+    }
+
     emit:
-    reads = trim_reads // channel: [ val(meta), [ reads ] ]
+    reads = prepped_reads // channel: [ val(meta), [ reads ] ]
 
     fastqc_html        // channel: [ val(meta), [ html ] ]
     fastqc_zip         // channel: [ val(meta), [ zip ] ]
