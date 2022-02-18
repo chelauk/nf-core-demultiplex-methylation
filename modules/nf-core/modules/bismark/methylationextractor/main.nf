@@ -1,4 +1,5 @@
 process BISMARK_METHYLATIONEXTRACTOR {
+    errorStrategy 'ignore'
     tag "$meta.id"
     label 'process_high'
 
