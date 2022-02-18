@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/local/bin/Rscript --vanilla
 args = commandArgs(trailingOnly=TRUE)
 library("ggplot2")
 
