@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript --vanilla
+args = commandArgs(trailingOnly=TRUE)
 library("ggplot2")
 
 # Read in the table
