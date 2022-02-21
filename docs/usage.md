@@ -6,7 +6,7 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 
 ```mermaid
 graph LR
-A{demultiplex} 
+A{demultiplex}
 A -->|yes|
 A -->|no|
 ```
