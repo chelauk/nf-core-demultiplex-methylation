@@ -71,7 +71,7 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
 
 ## Documentation
 
-The nf-core/demultiplex pipeline comes with documentation about the pipeline [usage](https://nf-co.re/demultiplex/usage), [parameters](https://nf-co.re/demultiplex/parameters) and [output](https://nf-co.re/demultiplex/output).
+The nf-core/demultiplex pipeline comes with documentation about the pipeline [usage](https://github.com/chelauk/nf-core-demultiplex-methylation/blob/master/docs/usage.md) and [output](https://nf-co.re/demultiplex/output).
 
 ## Credits
 
