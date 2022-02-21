@@ -6,10 +6,9 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 
 ```mermaid
 graph LR
-A[Hard edge] -->B(Round edge)
-    B --> C{Decision}
-    C -->|One| D[Result one]
-    C -->|Two| E[Result two]
+A{demultiplex} 
+A -->|yes|
+A -->|no|
 ```
 
 ## Samplesheet input
