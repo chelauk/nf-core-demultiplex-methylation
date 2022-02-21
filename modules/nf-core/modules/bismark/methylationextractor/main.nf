@@ -13,13 +13,12 @@ process BISMARK_METHYLATIONEXTRACTOR {
 
     output:
     tuple val(meta), path("*.bedGraph.gz")          , emit: bedgraph
-    tuple val(meta), path("*pe.txt")                , emit: methylation_calls
     tuple val(meta), path("*.cov.gz")               , emit: coverage
-    tuple val(meta), path("*_splitting_report.txt") , emit: report
+    tuple val(meta), path("*_splitting_report.txt") , emit: splitting_report
     tuple val(meta), path("*.M-bias.txt")           , emit: mbias
-    tuple val(meta), path("*CHH_OB_*")              , emit: chh_ob
-    tuple val(meta), path("*CHG_OB_*")              , emit: chg_ob
-    tuple val(meta), path("*CpG_OB_*")              , emit: cpg_ob
+    tuple val(meta), path("CHH_OB_*")               , emit: chh_ob
+    tuple val(meta), path("CHG_OB_*")               , emit: chg_ob
+    tuple val(meta), path("CpG_OB_*")               , emit: cpg_ob
     path "versions.yml"                             , emit: versions
 
     when:
@@ -43,14 +42,14 @@ process BISMARK_METHYLATIONEXTRACTOR {
     def args = task.ext.args ?: ''
     def seqtype  = meta.single_end ? '-s' : '-p'
     """
-    touch ${meta.id}.bedGraph.gz
-    touch ${meta.id}.pe.txt
-    touch ${meta.id}.cov.gz
-    touch ${meta.id}._splitting_report.txt
-    touch ${meta.id}.M-bias.txt
-    touch ${meta.id}.CHH_OB_txt
-    touch ${meta.id}.CHG_OB_txt
-    touch ${meta.id}.CpG_OB_txt
+    random_id=\$(echo \$RANDOM | tr 0123456789 abcdefghij )
+    touch ${meta.id}."\$random_id".bedGraph.gz
+    touch ${meta.id}."\$random_id".cov.gz
+    touch ${meta.id}."\$random_id"_splitting_report.txt
+    touch ${meta.id}."\$random_id".M-bias.txt
+    touch CHH_OB_"\$random_id".${meta.id}.txt
+    touch CHG_OB_"\$random_id".${meta.id}.txt
+    touch CpG_OB_"\$random_id".${meta.id}.txt
     touch versions.yml
     """
 }

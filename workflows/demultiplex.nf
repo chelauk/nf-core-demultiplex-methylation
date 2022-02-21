@@ -128,7 +128,7 @@ workflow DEMULTIPLEX {
                 params.methylated_control,
                 params.unmethylated_control
                 )
-
+    ch_versions = ch_versions.mix(METHYLATION.out.versions)
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
@@ -139,14 +139,19 @@ workflow DEMULTIPLEX {
     workflow_summary    = WorkflowDemultiplex.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(Channel.from(ch_multiqc_config))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_multiqc_custom_config.collect().ifEmpty([]))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-
     MULTIQC (
-        ch_multiqc_files.collect()
+        ch_multiqc_config,
+        ch_multiqc_custom_config.collect().ifEmpty([]),
+        CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect(),
+        ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'),
+        PREP_SAMPLES.out.fastqc_zip.collect{it[1]}.ifEmpty([]),
+        PREP_SAMPLES.out.trim_zip.collect{it[1]}.ifEmpty([]),
+        PREP_SAMPLES.out.trim_log.collect{it[1]}.ifEmpty([]),
+        METHYLATION.out.alignment_report.collect{it[1]}.ifEmpty([]),
+        METHYLATION.out.chh_ob.collect{it[1]}.ifEmpty([]),
+        METHYLATION.out.chg_ob.collect{it[1]}.ifEmpty([]),
+        METHYLATION.out.cpg_ob.collect{it[1]}.ifEmpty([]),
+        METHYLATION.out.mbias.collect{it[1]}.ifEmpty([]),
     )
     multiqc_report = MULTIQC.out.report.toList()
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
