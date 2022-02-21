@@ -6,17 +6,10 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 
 ```mermaid
 graph LR
-A(demultiplex) --> B{split}
-B --> |FastQC| C[QC]
-B --> |TrimGalore| D[trim fastqs]
-D --> {split}
-D --> |align| E[Align to reference]
-D --> |align| F[Align to methylated control]
-D --> |align| G[Align to umethylated control]
-E --> H[extract methylation stats]
-F --> H[extract methylation stats]
-G --> H[extract methylation stats]
-H --> I[summarise methylation stats]
+A[Hard edge] -->B(Round edge)
+    B --> C{Decision}
+    C -->|One| D[Result one]
+    C -->|Two| E[Result two]
 ```
 
 ## Samplesheet input
