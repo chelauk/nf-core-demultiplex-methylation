@@ -1,12 +1,23 @@
-# nf-core/demultiplex: Usage
-
-## :warning: Please read this documentation on the nf-core website: [https://nf-co.re/demultiplex/usage](https://nf-co.re/demultiplex/usage)
-
-> _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
+# nf-core/demultiplex-methylation: Usage
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+This pipeline runs an optional demultiplex followed by the bismark pipeline for analysis of RRBS
+
+```mermaid
+graph LR
+A(demultiplex) --> B{split}
+B --> |FastQC| C[QC]
+B --> |TrimGalore| D[trim fastqs]
+D --> {split}
+D --> |align| E[Align to reference]
+D --> |align| F[Align to methylated control]
+D --> |align| G[Align to umethylated control]
+E --> H[extract methylation stats]
+F --> H[extract methylation stats]
+G --> H[extract methylation stats]
+H --> I[summarise methylation stats]
+```
 
 ## Samplesheet input
 
