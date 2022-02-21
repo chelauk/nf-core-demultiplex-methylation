@@ -12,15 +12,15 @@ process BISMARK_METHYLATIONEXTRACTOR {
     tuple val(meta), path(bam)
 
     output:
-    tuple val(meta), path("*.bedGraph.gz")         , emit: bedgraph
-    tuple val(meta), path("*pe.txt")               , emit: methylation_calls
-    tuple val(meta), path("*.cov.gz")              , emit: coverage
-    tuple val(meta), path("*_splitting_report.txt"), emit: report
-    tuple val(meta), path("*.M-bias.txt")          , emit: mbias
+    tuple val(meta), path("*.bedGraph.gz")          , emit: bedgraph
+    tuple val(meta), path("*pe.txt")                , emit: methylation_calls
+    tuple val(meta), path("*.cov.gz")               , emit: coverage
+    tuple val(meta), path("*_splitting_report.txt") , emit: report
+    tuple val(meta), path("*.M-bias.txt")           , emit: mbias
     tuple val(meta), path("*CHH_OB_*")              , emit: chh_ob
     tuple val(meta), path("*CHG_OB_*")              , emit: chg_ob
     tuple val(meta), path("*CpG_OB_*")              , emit: cpg_ob
-    path "versions.yml"                            , emit: versions
+    path "versions.yml"                             , emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -53,6 +53,4 @@ process BISMARK_METHYLATIONEXTRACTOR {
     touch ${meta.id}.CpG_OB_txt
     touch versions.yml
     """
-
-
 }

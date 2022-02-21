@@ -28,7 +28,7 @@ process BISMARK_ALIGN {
     bismark \\
         --unmapped \\
         $fastq \\
-        --basename ${meta.id}_${args} \\
+        --basename ${prefix} \\
         --genome $index 
 
     cat <<-END_VERSIONS > versions.yml
@@ -41,8 +41,8 @@ process BISMARK_ALIGN {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def fastq      = meta.single_end ? reads : "-1 ${reads[0]} -2 ${reads[1]}"
     """
-    touch ${prefix}_${args}.bam
-    touch ${prefix}_${args}.report.txt
+    touch ${prefix}.bam
+    touch ${prefix}.report.txt
     touch versions.yml
     """
 

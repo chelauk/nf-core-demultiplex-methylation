@@ -25,7 +25,9 @@ process BISMARK_CONVERSION {
     bs_conversion_assessment.R ${prefix}
     """
     stub:
+    def args = task.ext.args ?: ''
+    def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch report.pdf
+    touch ${prefix}.pdf
     """
 }
