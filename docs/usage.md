@@ -13,6 +13,9 @@ step1a --> step2(FastQC)
 step1b --> step2(FastQC)
 step1a --> step3(TrimGalore)
 step1b --> step3(TrimGalore)
+step3 --> step4(align to reference)
+step3 --> step5(align to unmethylated control)
+step3 --> step5(align to methylated control)
 ```
 
 ## Samplesheet input
