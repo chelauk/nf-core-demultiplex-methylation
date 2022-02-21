@@ -1,7 +1,7 @@
 process BISMARK_METHYLATIONEXTRACTOR {
     errorStrategy 'ignore'
     tag "$meta.id"
-    label 'process_high'
+    label 'process_medium'
 
     conda (params.enable_conda ? "bioconda::bismark=0.23.0" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
