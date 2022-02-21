@@ -15,7 +15,10 @@ step1a --> step3(TrimGalore)
 step1b --> step3(TrimGalore)
 step3 --> step4(align to reference)
 step3 --> step5(align to unmethylated control)
-step3 --> step5(align to methylated control)
+step3 --> step6(align to methylated control)
+step4 --> step7(extract methylation stats)
+step5 --> step7(extract methylation stats)
+step6 --> step7(extract methylation stats)
 ```
 
 ## Samplesheet input
