@@ -7,8 +7,8 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 ```mermaid
 flowchart TD
 step1{Are the samples multiplexed?}
-step1 -->|One| D[Result one]
-step1 -->|Two| E[Result two]
+step1 -->|Yes| D[Demultiplex]
+step1 -->|No| E[Continue]
 ```
 
 ## Samplesheet input
