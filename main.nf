@@ -17,8 +17,8 @@ nextflow.enable.dsl = 2
 ========================================================================================
 */
 
-params.fasta                 = WorkflowMain.getGenomeAttribute(params, 'fasta')
-params.bismark               = WorkflowMain.getGenomeAttribute(params, 'bismark')
+params.fasta                        = WorkflowMain.getGenomeAttribute(params, 'fasta')
+params.bismark_refdir               = WorkflowMain.getGenomeAttribute(params, 'bismark')
 
 /*
 ========================================================================================

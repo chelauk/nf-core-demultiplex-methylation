@@ -22,15 +22,8 @@
                     "schema": "assets/schema_input.json",
                     "description": "Path to comma-separated file containing information about the samples in the experiment.",
                     "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/demultiplex/usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
-                },
-                "demultiplex" : {
-                    "type": "boolean",
-                    "description": "Are the fastq files multiplexed or not",
-                    "fa_icon": "fas fa-ban",
-                    "default": true,
-                    "hidden": true,
-                    "help_text": "The fastqfiles may or may not have an embedded barcode"
+                    "fa_icon": "fas fa-file-csv",
+                    "default": "input.csv"
                 },
                 "outdir": {
                     "type": "string",
@@ -78,12 +71,44 @@
                     "hidden": true,
                     "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
                 },
-                "fasta": {
+                "bismark_refdir": {
                     "type": "string",
-                    "format": "directory-path",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file",
-                    "fa_icon": "fas fa-code-branch"
+                    "default": "/data/scratch/DMP/UCEC/EVGENMOD/cjames/rachel/MolecularClocks/genomes",
+                    "description": "Location of the bowtie index"
+                },
+                "methylated_control": {
+                    "type": "string",
+                    "default": "/Users/cjames/sandbox/nextflow/nextflow_sandbox/nf-core-demultiplex-methylation/genome/RRBS_methylated_control",
+                    "description": "Location of the fully methylated control pUC19 genome"
+                },
+                "unmethylated_control": {
+                    "type": "string",
+                    "default": "/Users/cjames/sandbox/nextflow/nextflow_sandbox/nf-core-demultiplex-methylation/genome/RRBS_unmethylated_control",
+                    "description": "Location of the unmethylatate pUC19 genome"
+                }
+            }
+        },
+        "qc_and_demultiplex_options": {
+            "title": "QC and demultiplex options",
+            "type": "object",
+            "description": "Options for QC and demultiplexing",
+            "default": "",
+            "properties": {
+                "skip_qc": {
+                    "type": "string",
+                    "default": "None"
+                },
+                "skip_fastqc": {
+                    "type": "string",
+                    "default": "None"
+                },
+                "skip_trimming": {
+                    "type": "string",
+                    "default": "None"
+                },
+                "skip_demultiplex": {
+                    "type": "string",
+                    "default": "None"
                 }
             }
         },
@@ -255,6 +280,9 @@
             "$ref": "#/definitions/reference_genome_options"
         },
         {
+            "$ref": "#/definitions/qc_and_demultiplex_options"
+        },
+        {
             "$ref": "#/definitions/institutional_config_options"
         },
         {
@@ -263,5 +291,11 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "fasta": {
+            "type": "string",
+            "default": "None"
+        }
+    }
 }

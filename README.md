@@ -16,8 +16,8 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Write a 1-2 sentence summary of what data the pipeline is for and what it does -->
-**nf-core/demultiplex** is a bioinformatics best-practice analysis pipeline for demultiplex and run bismark.
+**nf-core/demultiplex-demultiplex** is a bioinformatics best-practice analysis pipeline to optionally demultiplex 
+fastq files run bismark against a human reference and pUC19 methylated and unmethylated controls.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. Where possible, these processes have been submitted to and installed from [nf-core/modules](https://github.com/nf-core/modules) in order to make them available to all nf-core pipelines, and to everyone within the Nextflow community!
 
@@ -53,7 +53,7 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
 3. Download the pipeline and test it on a minimal dataset with a single command:
 
     ```console
-    nextflow run nf-core/demultiplex -profile test,YOURPROFILE
+    nextflow run nf-core-demultiplex-methylation -profile test,YOURPROFILE
     ```
 
     Note that some form of configuration will be needed so that Nextflow knows how to fetch the required software. This is usually done in the form of a config profile (`YOURPROFILE` in the example command above). You can chain multiple config profiles in a comma-separated string.
@@ -65,10 +65,8 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
 
 4. Start running your own analysis!
 
-    <!-- TODO nf-core: Update the example "typical command" below used to run the pipeline -->
-
     ```console
-    nextflow run nf-core/demultiplex -profile <docker/singularity/podman/shifter/charliecloud/conda/institute> --input samplesheet.csv --genome GRCh37
+    nextflow run nf-core/demultiplex-methylation -profile singularity --input samplesheet.csv --genome GRCh38
     ```
 
 ## Documentation
@@ -77,24 +75,16 @@ The nf-core/demultiplex pipeline comes with documentation about the pipeline [us
 
 ## Credits
 
-nf-core/demultiplex was originally written by chela.
+nf-core-demultiplex-methylation was originally written by Chela James
 
 We thank the following people for their extensive assistance in the development of this pipeline:
-
-<!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
 ## Contributions and Support
 
 If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
 
-For further information or help, don't hesitate to get in touch on the [Slack `#demultiplex` channel](https://nfcore.slack.com/channels/demultiplex) (you can join with [this invite](https://nf-co.re/join/slack)).
-
 ## Citations
 
-<!-- TODO nf-core: Add citation for pipeline after first release. Uncomment lines below and update Zenodo doi and badge at the top of this file. -->
-<!-- If you use  nf-core/demultiplex for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
-
-<!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 
 You can cite the `nf-core` publication as follows:

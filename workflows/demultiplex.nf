@@ -9,7 +9,8 @@ def summary_params = NfcoreSchema.paramsSummaryMap(workflow, params)
 // Validate input parameters
 WorkflowDemultiplex.initialise(params, log)
 
-def checkPathParamList = [ params.input,
+checkPathParamList = [
+    params.input,
     params.multiqc_config,
     params.fasta,
     params.bismark_refdir,
