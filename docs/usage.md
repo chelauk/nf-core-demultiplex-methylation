@@ -6,7 +6,7 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 
 ```mermaid
 flowchart TD
-step1{Are the samples multiplexed?}
+step1{Multiplexed?}
 step1 -->|Yes| step1a(Demultiplex)
 step1 -->|No| step1b(skip Demultplex)
 step1a --> step2(FastQC)
