@@ -8,8 +8,7 @@ This pipeline runs an optional demultiplex followed by the bismark pipeline for 
 flowchart TD
 step1{Are the samples multiplexed?}
 step1 -->|Yes| step1a(Demultiplex)
-step1 -->|No| step1b(Continue)
-step1a --> step2(FastQC)
+step1 -->|No| step2(FastQC)
 step1b --> step2(FastQC)
 ```
 
