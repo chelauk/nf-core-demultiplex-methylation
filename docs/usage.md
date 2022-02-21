@@ -19,6 +19,7 @@ step3 --> step6(align to methylated control)
 step4 --> step7(extract methylation stats)
 step5 --> step7(extract methylation stats)
 step6 --> step7(extract methylation stats)
+step7 --> step8(plot methylation stats)
 ```
 
 ## Samplesheet input
