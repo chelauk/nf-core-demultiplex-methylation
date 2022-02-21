@@ -5,10 +5,7 @@
 This pipeline runs an optional demultiplex followed by the bismark pipeline for analysis of RRBS
 
 ```mermaid
-graph LR
-A{demultiplex}
-A -->|yes|
-A -->|no|
+flowchart TD
 ```
 
 ## Samplesheet input
