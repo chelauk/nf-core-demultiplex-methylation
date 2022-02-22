@@ -53,22 +53,22 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
     ```
 
 
-4. In your .bashrc file set the following variables:
+4. Edit your .bashrc file to set the following variables:
 
-   ```console
+   <pre><lang ="bash"><code>
    # Set all the Singularity cache dirs to Scratch
-   export SINGULARITY_CACHEDIR="/your/selected/scratch/folder/singularity_imgs"
+   export SINGULARITY_CACHEDIR=<b>/your/selected/scratch/folder/singularity_imgs</b>
    export SINGULARITY_TMPDIR=$SINGULARITY_CACHEDIR/tmp
    export SINGULARITY_LOCALCACHEDIR=$SINGULARITY_CACHEDIR/localcache
    export SINGULARITY_PULLFOLDER=$SINGULARITY_CACHEDIR/pull
    # match the NXF_SINGULARITY_CACHEDIR
-   export NXF_SINGULARITY_CACHEDIR=/data/scratch/DMP/UCEC/EVGENMOD/cjames/nextflow_pipelines/singularity_imgs
-   ```
+   export NXF_SINGULARITY_CACHEDIR=<b>/your/selected/scratch/folder/singularity_imgs</b>
+   </code></pre>
  
 5. Start running your own analysis
    edit a sbatch script
 
-    ```console
+    <pre><lang ="bash"><code>
     #!/bin/bash -l
     #SBATCH --job-name=demultiplex
     #SBATCH --output=nextflow_out.txt
@@ -76,11 +76,17 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
     #SBATCH --ntasks=1
     #SBATCH --time=120:00:00
 
-    nextflow run /location/of/your/nextflow_pipelines/nf-core-demultiplex-methylation \
+    nextflow run <b>/location/of/your/nextflow_pipelines/nf-core-demultiplex-methylation</b> \
 		--input input.csv  \
 		-profile slurm,singularity \
 		-resume
-    ```
+    </code></pre>
+
+6. Start your sbatch job:
+
+   ```console
+   sbatch runNextflow.sh
+   ````
 
 ## Documentation
 
