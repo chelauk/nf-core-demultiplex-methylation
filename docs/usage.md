@@ -67,10 +67,10 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 The typical command for running the pipeline is as follows:
 
 ```console
-nextflow run nf-core/demultiplex --input samplesheet.csv --genome GRCh37 -profile singularity
+nextflow run nf-core-demultiplex-methylation --input samplesheet.csv -profile slurm,singularity
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the pipeline with the `slurm/singularity` configuration profile. See below for more information about profiles.
 
 Note that the pipeline will create the following files in your working directory:
 
@@ -81,21 +81,49 @@ results         # Finished results (configurable, see below)
 # Other nextflow hidden files, eg. history of pipeline runs and old logs.
 ```
 
+### demultiplex
+
+The pipeline demultiplexes by default. To skip the demultiplex step:
+
+```console
+--skip_demultiplex 'yes'
+```
+
+### reference indexes
+The pipeline has pUC19 unmethylated and methylated controls included.
+For the human index and reference these are set in the conf/genomes.config file:
+
+```console
+params {
+  genomes {
+    'GRCh38' {
+      fasta  = '/data/scratch/DMP/UCEC/EVGENMOD/cjames/reference/Homo_sapiens/NCBI/GRCh38/Sequence/BismarkIndex/genome.fa
+      bismark_refdir  = '/data/scratch/DMP/UCEC/EVGENMOD/cjames/reference/Homo_sapiens/NCBI/GRCh38/Sequence/BismarkIndex
+    }   
+  }
+}
+```
+
+these parameters can be set in the sbatch script:
+
+```console
+--genome GRCh7
+--fasta /location/of/your/reference/fasta
+--bismark_refdir /location/of/your/reference/bismark/index
+```
+
+or the conf/genomes.config file can be edited.
+
+
+
 ### Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
 
 ```console
-nextflow pull nf-core/demultiplex
+git pull nf-core-demultiplex-methylation
 ```
 
-### Reproducibility
-
-It is a good idea to specify a pipeline version when running the pipeline on your data. This ensures that a specific version of the pipeline code and software are used when you run your pipeline. If you keep using the same tag, you'll be running the same version of the pipeline, even if there have been changes to the code since.
-
-First, go to the [nf-core/demultiplex releases page](https://github.com/nf-core/demultiplex/releases) and find the latest version number - numeric only (eg. `1.3.1`). Then specify this when running the pipeline with `-r` (one hyphen) - eg. `-r 1.3.1`.
-
-This version number will be logged in reports when you run the pipeline, so that you'll know what you used when you look back in the future.
 
 ## Core Nextflow arguments
 
