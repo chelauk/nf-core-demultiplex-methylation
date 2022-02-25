@@ -5,7 +5,7 @@ process BISMARK_CONVERSION {
     conda (params.enable_conda ? "r::tidverse=1.2.1" : null)
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/r-tidyverse:1.2.1' :
-        'quay.io/biocontainers/r-tidyverse:1.2.1' }"
+        'quay.io/biocontainers-r-tidyverse:1.2.1' }"
 
     input:
     tuple val(meta), path(chh_ob)
