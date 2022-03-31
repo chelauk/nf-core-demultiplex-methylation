@@ -71,8 +71,8 @@ process TRIMGALORE {
             $c_r2 \\
             $tpc_r1 \\
             $tpc_r2 \\
-            *_1.*fastq \\
-            *_2.*fastq
+            *_1.*fastq* \\
+            *_2.*fastq*
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
             trimgalore: \$(echo \$(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*\$//')
