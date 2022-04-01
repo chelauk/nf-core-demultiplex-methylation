@@ -71,8 +71,8 @@ process TRIMGALORE {
             $c_r2 \\
             $tpc_r1 \\
             $tpc_r2 \\
-            *R1*fastq* \\
-            *R2*fastq*
+            ${meta.id}*1*fastq* \\
+            ${meta.id}*2*fastq*
    
         cat <<-END_VERSIONS > versions.yml
         "${task.process}":
