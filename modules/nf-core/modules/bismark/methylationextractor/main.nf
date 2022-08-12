@@ -19,6 +19,7 @@ process BISMARK_METHYLATIONEXTRACTOR {
     tuple val(meta), path("CHH_OB_*")               , emit: chh_ob
     tuple val(meta), path("CHG_OB_*")               , emit: chg_ob
     tuple val(meta), path("CpG_OB_*")               , emit: cpg_ob
+    tuple val(meta), path("*OT*")                   , emit: ot
     path "versions.yml"                             , emit: versions
 
     when:
