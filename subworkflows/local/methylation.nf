@@ -47,22 +47,28 @@ workflow METHYLATION {
     //
     // module: BISMARK METHYLATIONEXTRACTOR
     //
-    ch_chh_ob = Channel.empty()
-    ch_chg_ob = Channel.empty()
-    ch_cpg_ob = Channel.empty()
-    ch_mbias  = Channel.empty()
+
     BISMARK_METHYLATIONEXTRACTOR(aligned)
-    ch_chh_ob = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
-    ch_chg_ob = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
-    ch_cpg_ob = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
-    ch_mbias  = BISMARK_METHYLATIONEXTRACTOR.out.mbias
+    ch_chh_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
+    ch_chg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
+    ch_cpg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
+    ch_mbias_ob = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ob
+    ch_chh_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ot
+    ch_chg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ot
+    ch_cpg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ot
+    ch_mbias_ot = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ot
 
     //
     // module: BISULPHITE CONVERSION
     //
-    BISMARK_CONVERSION (BISMARK_METHYLATIONEXTRACTOR.out.chh_ob,
-                        BISMARK_METHYLATIONEXTRACTOR.out.chg_ob,
-                        BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob)
+    BISMARK_CONVERSION (ch_chh_ob,
+                        ch_chg_ob,
+                        ch_cpg_ob,
+                        ch_mbias_ob,
+                        ch_chh_ot,
+                        ch_chg_ot,
+                        ch_cpg_ot,
+                        ch_mbias_ot)
 
 //    CDSV (ch_versions.unique().collectFile(name: 'collated_versions.yml'))
 
@@ -72,5 +78,9 @@ workflow METHYLATION {
     chh_ob           = ch_chh_ob.ifEmpty(null)
     chg_ob           = ch_chg_ob.ifEmpty(null)
     cpg_ob           = ch_cpg_ob.ifEmpty(null)
-    mbias            = ch_mbias.ifEmpty(null)
+    mbias_ob         = ch_mbias_ob.ifEmpty(null)
+    chh_ot           = ch_chh_ot.ifEmpty(null)
+    chg_ot           = ch_chg_ot.ifEmpty(null)
+    cpg_ot           = ch_cpg_ot.ifEmpty(null)
+    mbias_ot         = ch_mbias_ot.ifEmpty(null)
 }
