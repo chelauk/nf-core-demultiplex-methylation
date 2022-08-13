@@ -96,7 +96,7 @@ ot_bc <- ggplot() +
         data = ot_bs.conversion,
         stat = "identity"
     ) +
-    ggtitle(paste0("Methylation Percentages of original bottom (OT) strands - ", sample))
+    ggtitle(paste0("Methylation Percentages of original top (OT) strands - ", sample))
 
 # Create output file of the graph
 pdf(paste0(sample, "_ob.pdf"))
