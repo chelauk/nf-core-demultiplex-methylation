@@ -61,12 +61,12 @@ workflow METHYLATION {
     //
     // module: BISULPHITE CONVERSION
     //
-    BISMARK_CONVERSION (ch_chh_ob,
-                        ch_chg_ob,
-                        ch_cpg_ob,
-                        ch_chh_ot,
-                        ch_chg_ot,
-                        ch_cpg_ot)
+    BISMARK_CONVERSION (chh_ob,
+                        chg_ob,
+                        cpg_ob,
+                        chh_ot,
+                        chg_ot,
+                        cpg_ot)
 
 //    CDSV (ch_versions.unique().collectFile(name: 'collated_versions.yml'))
 
