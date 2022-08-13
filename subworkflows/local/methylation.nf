@@ -64,11 +64,9 @@ workflow METHYLATION {
     BISMARK_CONVERSION (ch_chh_ob,
                         ch_chg_ob,
                         ch_cpg_ob,
-                        ch_mbias_ob,
                         ch_chh_ot,
                         ch_chg_ot,
-                        ch_cpg_ot,
-                        ch_mbias_ot)
+                        ch_cpg_ot)
 
 //    CDSV (ch_versions.unique().collectFile(name: 'collated_versions.yml'))
 
