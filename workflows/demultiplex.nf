@@ -128,8 +128,10 @@ workflow DEMULTIPLEX {
                 params.methylated_control,
                 params.unmethylated_control
                 )
+	
     ch_versions = ch_versions.mix(METHYLATION.out.versions)
-    CUSTOM_DUMPSOFTWAREVERSIONS (
+    METHYLATION.out.alignment_report.view()
+	CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
@@ -155,7 +157,7 @@ workflow DEMULTIPLEX {
         METHYLATION.out.chh_ot.collect{it[1]}.ifEmpty([]),
         METHYLATION.out.chg_ot.collect{it[1]}.ifEmpty([]),
         METHYLATION.out.cpg_ot.collect{it[1]}.ifEmpty([]),
-        METHYLATION.out.mbias_ot.collect{it[1]}.ifEmpty([])
+        METHYLATION.out.mbias_ot.collect{it[0]}.ifEmpty([])
     )
     multiqc_report = MULTIQC.out.report.toList()
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)

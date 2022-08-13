@@ -51,7 +51,6 @@ workflow METHYLATION {
 
     BISMARK_METHYLATIONEXTRACTOR(aligned)
     chh_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
-    chh_ob.view()
     chg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
     cpg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
     mbias_ob = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ob
