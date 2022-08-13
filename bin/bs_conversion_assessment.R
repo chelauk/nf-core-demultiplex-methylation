@@ -101,6 +101,6 @@ ot_bc <- ggplot() +
 # Create output file of the graph
 pdf(paste0(sample, "_ob.pdf"))
 ob_bc
-pdf(paste(sample, "+_ot.pdf"))
+pdf(paste0(sample, "_ot.pdf"))
 ot_bc
 dev.off()
