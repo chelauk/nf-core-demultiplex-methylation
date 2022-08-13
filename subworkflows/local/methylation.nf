@@ -73,12 +73,12 @@ workflow METHYLATION {
     emit:
     versions         = ch_versions.ifEmpty(null) // channel: [ versions.yml ]
     alignment_report = aligned_report.ifEmpty(null)
-    chh_ob           = ch_chh_ob.ifEmpty(null)
-    chg_ob           = ch_chg_ob.ifEmpty(null)
-    cpg_ob           = ch_cpg_ob.ifEmpty(null)
-    mbias_ob         = ch_mbias_ob.ifEmpty(null)
-    chh_ot           = ch_chh_ot.ifEmpty(null)
-    chg_ot           = ch_chg_ot.ifEmpty(null)
-    cpg_ot           = ch_cpg_ot.ifEmpty(null)
-    mbias_ot         = ch_mbias_ot.ifEmpty(null)
+    chh_ob           = chh_ob.ifEmpty(null)
+    chg_ob           = chg_ob.ifEmpty(null)
+    cpg_ob           = cpg_ob.ifEmpty(null)
+    mbias_ob         = mbias_ob.ifEmpty(null)
+    chh_ot           = chh_ot.ifEmpty(null)
+    chg_ot           = chg_ot.ifEmpty(null)
+    cpg_ot           = cpg_ot.ifEmpty(null)
+    mbias_ot         = mbias_ot.ifEmpty(null)
 }
