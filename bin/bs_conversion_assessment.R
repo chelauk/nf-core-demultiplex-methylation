@@ -79,9 +79,9 @@ ot_bs.conversion <- data.frame(
 )
 
 # Reorder
-ob_bs.conversion$Type <- factor(bs.conversion$Type, levels = c("CHH", "CHG", "Total non-CpG", "Total CpG"))
+ob_bs.conversion$Type <- factor(ob_bs.conversion$Type, levels = c("CHH", "CHG", "Total non-CpG", "Total CpG"))
 
-ot_bs.conversion$Type <- factor(bs.conversion$Type, levels = c("CHH", "CHG", "Total non-CpG", "Total CpG"))
+ot_bs.conversion$Type <- factor(ob_bs.conversion$Type, levels = c("CHH", "CHG", "Total non-CpG", "Total CpG"))
 
 # Plots for each methylation rate
 ob_bc <- ggplot() +
