@@ -53,11 +53,10 @@ workflow METHYLATION {
     chh_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
     chg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
     cpg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
-    mbias_ob = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ob
+    mbias    = BISMARK_METHYLATIONEXTRACTOR.out.mbias
     chh_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ot
     chg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ot
     cpg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ot
-    mbias_ot = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ot
 
     //
     // module: BISULPHITE CONVERSION
@@ -77,9 +76,8 @@ workflow METHYLATION {
     chh_ob           = chh_ob.ifEmpty(null)
     chg_ob           = chg_ob.ifEmpty(null)
     cpg_ob           = cpg_ob.ifEmpty(null)
-    mbias_ob         = mbias_ob.ifEmpty(null)
+    mbias            = mbias.ifEmpty(null)
     chh_ot           = chh_ot.ifEmpty(null)
     chg_ot           = chg_ot.ifEmpty(null)
     cpg_ot           = cpg_ot.ifEmpty(null)
-    mbias_ot         = mbias_ot.ifEmpty(null)
 }

@@ -18,11 +18,11 @@ process MULTIQC {
     path ('chh_ob/*')
     path ('chg_ob/*')
     path ('cpg_ob/*')
-    path ('mbias_ob/*')
+    path ('mbias/*')
     path ('chh_ot/*')
     path ('chg_ot/*')
     path ('cpg_ot/*')
-    path ('mbias_ot/*')
+
 //    path software_versions_2
 
     output:
