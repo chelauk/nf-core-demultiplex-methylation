@@ -44,33 +44,42 @@ workflow METHYLATION {
     BISMARK_UNMETHYLATED(reads,unmethylated_control)
     aligned = aligned.mix(BISMARK_UNMETHYLATED.out.bam)
     aligned_report = aligned_report.mix(BISMARK_UNMETHYLATED.out.report)
+
     //
     // module: BISMARK METHYLATIONEXTRACTOR
     //
-    ch_chh_ob = Channel.empty()
-    ch_chg_ob = Channel.empty()
-    ch_cpg_ob = Channel.empty()
-    ch_mbias  = Channel.empty()
+
     BISMARK_METHYLATIONEXTRACTOR(aligned)
-    ch_chh_ob = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
-    ch_chg_ob = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
-    ch_cpg_ob = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
-    ch_mbias  = BISMARK_METHYLATIONEXTRACTOR.out.mbias
+    chh_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ob
+    chg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ob
+    cpg_ob   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob
+    mbias_ob = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ob
+    chh_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ot
+    chg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ot
+    cpg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ot
+    mbias_ot = BISMARK_METHYLATIONEXTRACTOR.out.mbias_ot
 
     //
     // module: BISULPHITE CONVERSION
     //
-    BISMARK_CONVERSION (BISMARK_METHYLATIONEXTRACTOR.out.chh_ob,
-                        BISMARK_METHYLATIONEXTRACTOR.out.chg_ob,
-                        BISMARK_METHYLATIONEXTRACTOR.out.cpg_ob)
+    BISMARK_CONVERSION (chh_ob,
+                        chg_ob,
+                        cpg_ob,
+                        chh_ot,
+                        chg_ot,
+                        cpg_ot)
 
 //    CDSV (ch_versions.unique().collectFile(name: 'collated_versions.yml'))
 
     emit:
     versions         = ch_versions.ifEmpty(null) // channel: [ versions.yml ]
     alignment_report = aligned_report.ifEmpty(null)
-    chh_ob           = ch_chh_ob.ifEmpty(null)
-    chg_ob           = ch_chg_ob.ifEmpty(null)
-    cpg_ob           = ch_cpg_ob.ifEmpty(null)
-    mbias            = ch_mbias.ifEmpty(null)
+    chh_ob           = chh_ob.ifEmpty(null)
+    chg_ob           = chg_ob.ifEmpty(null)
+    cpg_ob           = cpg_ob.ifEmpty(null)
+    mbias_ob         = mbias_ob.ifEmpty(null)
+    chh_ot           = chh_ot.ifEmpty(null)
+    chg_ot           = chg_ot.ifEmpty(null)
+    cpg_ot           = cpg_ot.ifEmpty(null)
+    mbias_ot         = mbias_ot.ifEmpty(null)
 }

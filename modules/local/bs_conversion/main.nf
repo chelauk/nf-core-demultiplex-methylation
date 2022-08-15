@@ -11,6 +11,9 @@ process BISMARK_CONVERSION {
     tuple val(meta), path(chh_ob)
     tuple val(meta), path(chg_ob)
     tuple val(meta), path(cpg_ob)
+    tuple val(meta), path(chh_ot)
+    tuple val(meta), path(chg_ot)
+    tuple val(meta), path(cpg_ot)
 
     output:
     tuple val(meta), path("*pdf")             , emit: pdf
