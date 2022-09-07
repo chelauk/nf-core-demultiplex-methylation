@@ -12,7 +12,8 @@ process BISMARK_ALIGN {
     path index
 
     output:
-    tuple val(meta), path("*bam")       , emit: bam
+    tuple val(meta), path("*sorted.bam")       , emit: bam
+    tuple val(meta), path("*sorted.bam.bai")   , emit: bam
     tuple val(meta), path("*report.txt"), emit: report
     tuple val(meta), path("*fq.gz")     , optional:true, emit: unmapped
     path "versions.yml"                 , emit: versions
@@ -29,7 +30,10 @@ process BISMARK_ALIGN {
         --unmapped \\
         $fastq \\
         --basename ${prefix} \\
-        --genome $index 
+        --genome $index
+    
+    samtools sort ${prefix}.bam -o ${prefix}_sorted.bam
+    samtools index ${prefix}_sorted.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
