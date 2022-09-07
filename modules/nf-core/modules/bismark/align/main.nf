@@ -31,9 +31,10 @@ process BISMARK_ALIGN {
         $fastq \\
         --basename ${prefix} \\
         --genome $index
-    
-    samtools sort ${prefix}.bam -o ${prefix}_sorted.bam
-    samtools index ${prefix}_sorted.bam
+    filename=${prefix}*bam
+    my_bam="\${filename%%.*}"
+    samtools sort "\$my_bam".bam -o "\$my_bam"_sorted.bam
+    samtools index "\$my_bam"_sorted.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
