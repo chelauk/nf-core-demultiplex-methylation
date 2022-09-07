@@ -31,8 +31,8 @@ process BISMARK_ALIGN {
         $fastq \\
         --basename ${prefix} \\
         --genome $index
-    filename=${prefix}*bam
-    my_bam="\${filename%%.*}"
+    
+    my_bam="\$( basename *bam .bam )"
     samtools sort "\$my_bam".bam -o "\$my_bam"_sorted.bam
     samtools index "\$my_bam"_sorted.bam
 
