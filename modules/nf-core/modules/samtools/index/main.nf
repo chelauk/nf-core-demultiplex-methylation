@@ -22,7 +22,7 @@ process SAMTOOLS_INDEX {
 
     script:
     def args = task.ext.args ?: ''
-    def output = filename.take(input.lastIndexOf('.'))
+    def output = input.take(input.lastIndexOf('.'))
     """
     samtools \\
         sort \\
