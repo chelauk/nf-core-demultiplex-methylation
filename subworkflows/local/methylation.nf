@@ -6,6 +6,8 @@ include { BISMARK_ALIGN    }                      from '../../modules/nf-core/mo
 include { BISMARK_ALIGN as BISMARK_METHYLATED }   from '../../modules/nf-core/modules/bismark/align/main'
 include { BISMARK_ALIGN as BISMARK_UNMETHYLATED } from '../../modules/nf-core/modules/bismark/align/main'
 include { SAMTOOLS_INDEX }                        from '../../modules/nf-core/modules/samtools/index/main'
+include { SAMTOOLS_INDEX as INDEX_METHYLATED }    from '../../modules/nf-core/modules/samtools/index/main'
+include { SAMTOOLS_INDEX as INDEX_UNMETHYLATED }  from '../../modules/nf-core/modules/samtools/index/main'
 include { BISMARK_METHYLATIONEXTRACTOR }          from '../../modules/nf-core/modules/bismark/methylationextractor/main'
 include { BISMARK_CONVERSION }                    from '../../modules/local/bs_conversion/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS as CDSV }   from '../../modules/nf-core/modules/custom/dumpsoftwareversions/main'
@@ -41,14 +43,14 @@ workflow METHYLATION {
     BISMARK_METHYLATED(reads,methylated_control)
     aligned = aligned.mix(BISMARK_METHYLATED.out.bam)
     aligned_report = aligned_report.mix(BISMARK_METHYLATED.out.report)
-    SAMTOOLS_INDEX(BISMARK_ALIGN.out.bam)
+    INDEX_METHYLATED(BISMARK_ALIGN.out.bam)
     //
     // module: BISMARK ALIGN UNMETHYLATED CONTROL
     //
     BISMARK_UNMETHYLATED(reads,unmethylated_control)
     aligned = aligned.mix(BISMARK_UNMETHYLATED.out.bam)
     aligned_report = aligned_report.mix(BISMARK_UNMETHYLATED.out.report)
-    SAMTOOLS_INDEX(BISMARK_UNMETHYLATED.out.bam)
+    INDEX_UNMETHYLATED(BISMARK_UNMETHYLATED.out.bam)
 
     //
     // module: BISMARK METHYLATIONEXTRACTOR
