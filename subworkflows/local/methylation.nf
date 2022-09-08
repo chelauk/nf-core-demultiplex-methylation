@@ -41,12 +41,14 @@ workflow METHYLATION {
     BISMARK_METHYLATED(reads,methylated_control)
     aligned = aligned.mix(BISMARK_METHYLATED.out.bam)
     aligned_report = aligned_report.mix(BISMARK_METHYLATED.out.report)
+    SAMTOOLS_INDEX(BISMARK_ALIGN.out.bam)
     //
     // module: BISMARK ALIGN UNMETHYLATED CONTROL
     //
     BISMARK_UNMETHYLATED(reads,unmethylated_control)
     aligned = aligned.mix(BISMARK_UNMETHYLATED.out.bam)
     aligned_report = aligned_report.mix(BISMARK_UNMETHYLATED.out.report)
+    SAMTOOLS_INDEX(BISMARK_UNMETHYLATED.out.bam)
 
     //
     // module: BISMARK METHYLATIONEXTRACTOR
