@@ -22,20 +22,20 @@ process SAMTOOLS_INDEX {
 
     script:
     def args = task.ext.args ?: ''
-    def output = input.take(input.lastIndexOf('.'))
     """
+    output=\${input%%.*}
     samtools \\
         sort \\
         -@ ${task.cpus-1} \\
         $args \\
         $input \\
-        -o ${output}_sorted.bam
+        -o "\$output"_sorted.bam
 
     samtools \\
         index \\
         -@ ${task.cpus-1} \\
         $args \\
-        ${output}_sorted.bam
+        "\$output"_sorted.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
