@@ -11,7 +11,7 @@ process SAMTOOLS_INDEX {
     tuple val(meta), path(input)
 
     output:
-    tuple val(meta), path("*.bam") , optional:true, emit: bam
+    tuple val(meta), path("*sorted.bam") , optional:true, emit: bam
     tuple val(meta), path("*.bai") , optional:true, emit: bai
     tuple val(meta), path("*.csi") , optional:true, emit: csi
     tuple val(meta), path("*.crai"), optional:true, emit: crai
@@ -22,12 +22,20 @@ process SAMTOOLS_INDEX {
 
     script:
     def args = task.ext.args ?: ''
+    def output = filename.take(input.lastIndexOf('.'))
     """
+    samtools \\
+        sort \\
+        -@ ${task.cpus-1} \\
+        $args \\
+        $input \\
+        -o ${output}_sorted.bam
+
     samtools \\
         index \\
         -@ ${task.cpus-1} \\
         $args \\
-        $input
+        ${output}_sorted.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
