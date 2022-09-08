@@ -21,6 +21,9 @@
             "multiqc": {
                 "git_sha": "e20e57f90b6787ac9a010a980cf6ea98bd990046"
             },
+            "samtools/index": {
+                "git_sha": "897c33d5da084b61109500ee44c01da2d3e4e773"
+            },
             "trimgalore": {
                 "git_sha": "e20e57f90b6787ac9a010a980cf6ea98bd990046"
             }

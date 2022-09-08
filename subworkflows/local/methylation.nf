@@ -5,6 +5,7 @@
 include { BISMARK_ALIGN    }                      from '../../modules/nf-core/modules/bismark/align/main'
 include { BISMARK_ALIGN as BISMARK_METHYLATED }   from '../../modules/nf-core/modules/bismark/align/main'
 include { BISMARK_ALIGN as BISMARK_UNMETHYLATED } from '../../modules/nf-core/modules/bismark/align/main'
+include { SAMTOOLS_INDEX }                        from '../../modules/nf-core/modules/samtools/index/main'
 include { BISMARK_METHYLATIONEXTRACTOR }          from '../../modules/nf-core/modules/bismark/methylationextractor/main'
 include { BISMARK_CONVERSION }                    from '../../modules/local/bs_conversion/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS as CDSV }   from '../../modules/nf-core/modules/custom/dumpsoftwareversions/main'
@@ -32,6 +33,8 @@ workflow METHYLATION {
     aligned = aligned.mix(BISMARK_ALIGN.out.bam)
     aligned_report = aligned_report.mix(BISMARK_ALIGN.out.report)
     ch_versions = ch_versions.mix(BISMARK_ALIGN.out.versions)
+
+    SAMTOOLS_INDEX(BISMARK_ALIGN.out.bam)
     //
     // module: BISMARK ALIGN METHYLATED CONTROL
     //
