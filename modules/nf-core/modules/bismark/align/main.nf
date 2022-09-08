@@ -32,10 +32,6 @@ process BISMARK_ALIGN {
         --basename ${prefix} \\
         --genome $index
     
-    my_bam="\$( basename *bam .bam )"
-    samtools sort "\$my_bam".bam -o "\$my_bam"_sorted.bam
-    samtools index "\$my_bam"_sorted.bam
-
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bismark: \$(echo \$(bismark -v 2>&1) | sed 's/^.*Bismark Version: v//; s/Copyright.*\$//')
