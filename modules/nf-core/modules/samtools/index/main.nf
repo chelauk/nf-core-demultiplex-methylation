@@ -35,7 +35,7 @@ process SAMTOOLS_INDEX {
         index \\
         -@ ${task.cpus-1} \\
         $args \\
-        "\${output"_sorted.bam
+        "\$output"_sorted.bam
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
