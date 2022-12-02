@@ -35,16 +35,19 @@ workflow METHYLATION {
     //
     // module: BISMARK ALIGN METHYLATED CONTROL
     //
-    BISMARK_METHYLATED(reads,methylated_control)
-    aligned = aligned.mix(BISMARK_METHYLATED.out.bam)
-    aligned_report = aligned_report.mix(BISMARK_METHYLATED.out.report)
+    if (params.use_controls) {
+        BISMARK_METHYLATED(reads,methylated_control)
+        aligned = aligned.mix(BISMARK_METHYLATED.out.bam)
+        aligned_report = aligned_report.mix(BISMARK_METHYLATED.out.report)
+    }
     //
     // module: BISMARK ALIGN UNMETHYLATED CONTROL
     //
-    BISMARK_UNMETHYLATED(reads,unmethylated_control)
-    aligned = aligned.mix(BISMARK_UNMETHYLATED.out.bam)
-    aligned_report = aligned_report.mix(BISMARK_UNMETHYLATED.out.report)
-
+    if (params.use_controls) {
+        BISMARK_UNMETHYLATED(reads,unmethylated_control)
+        aligned = aligned.mix(BISMARK_UNMETHYLATED.out.bam)
+        aligned_report = aligned_report.mix(BISMARK_UNMETHYLATED.out.report)
+    }
     //
     // module: BISMARK METHYLATIONEXTRACTOR
     //
