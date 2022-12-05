@@ -32,6 +32,14 @@ if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input sample
 ch_multiqc_config        = file("$projectDir/assets/multiqc_config.yaml", checkIfExists: true)
 ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multiqc_config) : Channel.empty()
 
+
+// intitialise channels based on params
+
+fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : Channel.empty()
+bismark_refdir        = params.bismark_refdir        ? Channel.fromPath(params.bismark_refdir).collect()        : Channel.empty()
+methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.empty()
+unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()    : Channel.empty()
+
 /*
 ========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -124,7 +132,7 @@ workflow DEMULTIPLEX {
     // run Methylation analysis
     //
     METHYLATION (prepped_reads,
-                params.bismark_refdir,
+                bismark_refdir,
                 params.methylated_control,
                 params.unmethylated_control
                 )
