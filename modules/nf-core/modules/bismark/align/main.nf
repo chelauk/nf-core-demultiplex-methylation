@@ -12,7 +12,7 @@ process BISMARK_ALIGN {
     path index
 
     output:
-    tuple val(meta), path("*bam")       , emit: bam
+    tuple val(meta), path("*.bam")       , emit: bam
     tuple val(meta), path("*report.txt"), emit: report
     tuple val(meta), path("*fq.gz")     , optional:true, emit: unmapped
     path "versions.yml"                 , emit: versions
@@ -29,8 +29,8 @@ process BISMARK_ALIGN {
         --unmapped \\
         $fastq \\
         --basename ${prefix} \\
-        --genome $index 
-
+        --genome $index
+    
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bismark: \$(echo \$(bismark -v 2>&1) | sed 's/^.*Bismark Version: v//; s/Copyright.*\$//')
