@@ -17,7 +17,6 @@ checkPathParamList = [
     ]
 
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-println(params.bismark_refdir)
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
@@ -58,7 +57,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules
 //
 
-//include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
+include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
 include { CAT_FASTQ                   } from '../modules/nf-core/modules/cat/fastq/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
@@ -148,7 +147,7 @@ workflow DEMULTIPLEX {
     workflow_summary    = WorkflowDemultiplex.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
-"""
+
     MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
@@ -168,7 +167,7 @@ workflow DEMULTIPLEX {
     )
     multiqc_report = MULTIQC.out.report.toList()
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
-"""
+
 }
 
 /*
