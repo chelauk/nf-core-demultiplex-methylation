@@ -49,6 +49,11 @@
             "fa_icon": "fas fa-dna",
             "description": "Reference genome related files and options required for the workflow.",
             "properties": {
+                "fasta": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "location for reference genome file"
+                },
                 "genome": {
                     "type": "string",
                     "description": "Name of iGenomes reference.",
@@ -61,6 +66,11 @@
                     "description": "Directory / URL base for iGenomes references.",
                     "default": "s3://ngi-igenomes/igenomes",
                     "fa_icon": "fas fa-cloud-download-alt"
+                },
+                "genomes_base": {
+                    "type": "string",
+                    "default": "/data/scratch/DMP/UCEC/EVGENMOD/cjames/reference",
+                    "description": "shortcut for index genome folder"
                 },
                 "igenomes_ignore": {
                     "type": "boolean",
@@ -92,9 +102,34 @@
             "description": "Options for QC and demultiplexing",
             "default": "",
             "properties": {
+                "use_controls": {
+                    "type": "string",
+                    "default": "false",
+                    "description": "check unmethylated and and methylated controls"
+                },
                 "skip_qc": {
                     "type": "string",
                     "default": "None"
+                },
+                "clip_r1": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "trim galore option"
+                },
+                "clip_r2": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "trim galore option"
+                },
+                "three_prime_clip_r1": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "trim galore option"
+                },
+                "three_prime_clip_r2": {
+                    "type": "string",
+                    "default": "None",
+                    "description": "trim galore option"
                 },
                 "skip_fastqc": {
                     "type": "string",
@@ -289,35 +324,5 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ],
-    "properties": {
-        "fasta": {
-            "type": "string",
-            "default": "None"
-        },
-        "genomes_base": {
-            "type": "string",
-            "default": "/data/scratch/DMP/UCEC/EVGENMOD/cjames/reference"
-        },
-        "use_controls": {
-            "type": "string",
-            "default": "false"
-        },
-        "clip_r1": {
-            "type": "string",
-            "default": null
-        },
-        "clip_r2": {
-            "type": "string",
-            "default": null
-        },
-        "three_prime_clip_r1": {
-            "type": "string",
-            "default": null
-        },
-        "three_prime_clip_r2": {
-            "type": "string",
-            "default": null
-        }
-    }
+    ]
 }
