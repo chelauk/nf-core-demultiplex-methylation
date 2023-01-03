@@ -12,7 +12,8 @@ WorkflowDemultiplex.initialise(params, log)
 checkPathParamList = [
     params.input,
     params.multiqc_config,
-    params.fasta
+    params.fasta,
+    params.bismark_refdir
     ]
 
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
