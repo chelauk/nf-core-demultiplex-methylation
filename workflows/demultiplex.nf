@@ -12,8 +12,7 @@ WorkflowDemultiplex.initialise(params, log)
 checkPathParamList = [
     params.input,
     params.multiqc_config,
-    params.fasta,
-    params.bismark_refdir
+    params.fasta
     ]
 
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -35,8 +34,8 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 
 fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : Channel.empty()
 bismark_refdir        = params.bismark_refdir        ? Channel.fromPath(params.bismark_refdir).collect()        : Channel.empty()
-methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.value([]) 
-unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()  : Channel.value([]) 
+methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.value([])
+unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()  : Channel.value([])
 /*
 ========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
