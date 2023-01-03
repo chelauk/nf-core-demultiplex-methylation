@@ -13,13 +13,11 @@ checkPathParamList = [
     params.input,
     params.multiqc_config,
     params.fasta,
-    params.bismark_refdir,
-    params.methylated_control,
-    params.unmethylated_control
+    params.bismark_refdir
     ]
 
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
-
+println(params.bismark_refdir)
 // Check mandatory parameters
 if (params.input) { ch_input = file(params.input) } else { exit 1, 'Input samplesheet not specified!' }
 
@@ -37,9 +35,8 @@ ch_multiqc_custom_config = params.multiqc_config ? Channel.fromPath(params.multi
 
 fasta                 = params.fasta                 ? Channel.fromPath(params.fasta).collect()                 : Channel.empty()
 bismark_refdir        = params.bismark_refdir        ? Channel.fromPath(params.bismark_refdir).collect()        : Channel.empty()
-methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.empty()
-unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()    : Channel.empty()
-
+methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.value([]) 
+unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()  : Channel.value([]) 
 /*
 ========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -61,7 +58,7 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
+//include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
 include { CAT_FASTQ                   } from '../modules/nf-core/modules/cat/fastq/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
 
@@ -131,10 +128,13 @@ workflow DEMULTIPLEX {
     //
     // run Methylation analysis
     //
+//	prepped_reads.view()
+	bismark_refdir.view()
+
     METHYLATION (prepped_reads,
                 bismark_refdir,
-                params.methylated_control,
-                params.unmethylated_control
+                methylated_control,
+                unmethylated_control
                 )
 
     ch_versions = ch_versions.mix(METHYLATION.out.versions)
@@ -148,6 +148,7 @@ workflow DEMULTIPLEX {
     workflow_summary    = WorkflowDemultiplex.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 
+"""
     MULTIQC (
         ch_multiqc_config,
         ch_multiqc_custom_config.collect().ifEmpty([]),
@@ -167,6 +168,7 @@ workflow DEMULTIPLEX {
     )
     multiqc_report = MULTIQC.out.report.toList()
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
+"""
 }
 
 /*
