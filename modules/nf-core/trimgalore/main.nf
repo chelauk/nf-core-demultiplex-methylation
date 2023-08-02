@@ -85,9 +85,7 @@ process TRIMGALORE {
     """
     touch ${prefix}_1.fq.gz
     touch ${prefix}_2.fq.gz
-    touch ${prefix}.zip
-    touch ${prefix}.html
-    touch ${prefix}.report.txt
+    touch ${prefix}.trim_galore.report.txt
     touch versions.yml
     """
 }

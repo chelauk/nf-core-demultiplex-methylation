@@ -77,8 +77,6 @@ workflow METHYLATION {
     // module: BISULPHITE CONVERSION
     //
 
-    target_bed.view()
-    
     if (params.target_bed) {
         FILTER_BISMARK_MX ( chh_ob,
                             chg_ob,

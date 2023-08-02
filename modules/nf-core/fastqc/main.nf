@@ -49,6 +49,7 @@ process FASTQC {
     // Add soft-links to original FastQs for consistent naming in pipeline
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
+    echo "this the fastqc stub"
     touch ${prefix}.html
     touch ${prefix}.zip
     touch versions.yml
