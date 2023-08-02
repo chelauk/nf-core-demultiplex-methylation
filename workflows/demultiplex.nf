@@ -36,6 +36,8 @@ fasta                 = params.fasta                 ? Channel.fromPath(params.f
 bismark_refdir        = params.bismark_refdir        ? Channel.fromPath(params.bismark_refdir).collect()        : Channel.empty()
 methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.value([])
 unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()  : Channel.value([])
+target_bed            = params.target_bed            ? Channel.fromPath(params.target_bed).collect()            : Channel.empty()
+target_bed.view()
 /*
 ========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -57,9 +59,9 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
-include { CAT_FASTQ                   } from '../modules/nf-core/modules/cat/fastq/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 //
 // SUBWORKFLOW: Installed from subworkflow
@@ -127,13 +129,12 @@ workflow DEMULTIPLEX {
     //
     // run Methylation analysis
     //
-//	prepped_reads.view()
-	bismark_refdir.view()
 
     METHYLATION (prepped_reads,
                 bismark_refdir,
                 methylated_control,
-                unmethylated_control
+                unmethylated_control,
+                target_bed
                 )
 
     ch_versions = ch_versions.mix(METHYLATION.out.versions)
