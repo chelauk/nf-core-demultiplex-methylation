@@ -40,11 +40,10 @@ process FILTER_BISMARK_MX {
     do 
       mkfifo ${prefix}.\$label
       awk 'BEGIN{OFS="\t"}NR>1{print \$3,\$4,\$4,\$1,\$2,\$5}' "\$label"_${prefix}_pe.txt > ${prefix}.\$label &
-      bedtools intersect -a ${prefix}.\$label -b $target_bed | awk '{OFS="\t"}{print \$4,\$5,\$1,\$2,\$6}'> tmp.\$label
+      bedtools intersect -a ${prefix}.\$label -b $target_bed | awk '{OFS="\\t"}{print \$4,\$5,\$1,\$2,\$6}'> tmp.\$label
       cat <( echo "Bismark methylation extractor version v0.23.0" ) tmp.\$label > "\$label"_${prefix}_pe_filtered.txt
       rm tmp.\$label
       rm ${prefix}.\$label
-      cat <(echo "Bismark methylation extractor version v0.23.0") "\$label"_${prefix}_pe.txt > tmp && mv tmp "\$label"_${prefix}_pe_filtered.txt
     done
 
     mkfifo bedgraph_fifo
