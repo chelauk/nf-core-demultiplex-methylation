@@ -93,6 +93,21 @@ The pipeline demultiplexes by default. To skip the demultiplex step:
 --skip_demultiplex 'yes'
 ```
 
+### use controls
+
+The use of controls is optional
+```
+--use_controls 
+```
+
+### 
+
+The use of controls is optional
+```
+--use_controls 
+```
+
+
 ### reference indexes
 
 The pipeline has pUC19 unmethylated and methylated controls included.
