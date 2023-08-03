@@ -45,13 +45,15 @@ patient1,CONTROL_REP1,4,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001
 
 The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
 
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
+A final samplesheet file consisting of bothpaired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
 
 ```console
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
+patient,sample,lane,fastq_1,fastq_2
+Patient1,CONTROL_REP1,1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+patient1,CONTROL_REP2,1,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
+patient1,CONTROL_REP3,1,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
+patient1,TREATMENT_REP3,1,AEG588A5_S4_L001_R1_001.fastq.gz,AEG588A5_S4_L001_R2_001.fastq.gz
+patient1,TREATMENT_REP3,2,AEG588A5_S4_L002_R1_001.fastq.gz,AEG588A5_S4_L002_R2_001.fastq.gz
 ```
 
 | Column         | Description                                                                                                                                                                            |
