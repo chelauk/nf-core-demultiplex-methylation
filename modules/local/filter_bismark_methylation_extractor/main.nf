@@ -20,7 +20,7 @@ process FILTER_BISMARK_MX {
 
     output:
     tuple val(meta), path("*filtered.bedGraph.gz")          , emit: bedgraph
-    tuple val(meta), path("*filtered.bismark.cov.gz")               , emit: coverage
+    tuple val(meta), path("*filtered.cov.gz")               , emit: coverage
     tuple val(meta), path("CHH_OB_*filtered.txt")               , emit: chh_ob
     tuple val(meta), path("CHG_OB_*filtered.txt")               , emit: chg_ob
     tuple val(meta), path("CpG_OB_*filtered.txt")               , emit: cpg_ob
@@ -48,12 +48,12 @@ process FILTER_BISMARK_MX {
 
     mkfifo bedgraph_fifo
     zcat ${prefix}_pe.bedGraph.gz > bedgraph_fifo &
-    bedtools intersect -a bedgraph_fifo -b $target_bed | bgzip > ${prefix}_pe_filtered.bedGraph.gz
+    bedtools intersect -a bedgraph_fifo -b $target_bed | gzip > ${prefix}_pe_filtered.bedGraph.gz
     rm bedgraph_fifo
     
     mkfifo cov_fifo
     zcat ${prefix}_pe.bismark.cov.gz > cov_fifo &
-    bedtools intersect -a cov_fifo -b $target_bed | bgzip > ${prefix}_pe_filtered.cov.gz
+    bedtools intersect -a cov_fifo -b $target_bed | gzip > ${prefix}_pe_filtered.cov.gz
     rm cov_fifo
     
     cat <<-END_VERSIONS > versions.yml
