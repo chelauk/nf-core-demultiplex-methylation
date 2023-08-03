@@ -16,7 +16,7 @@
 
 ## Introduction
 
-**nf-core/demultiplex-demultiplex** is a bioinformatics best-practice analysis pipeline to optionally demultiplex 
+**nf-core/demultiplex-demultiplex** is a bioinformatics best-practice analysis pipeline to optionally demultiplex
 fastq files run bismark against a human reference and pUC19 methylated and unmethylated controls.
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. Where possible, these processes have been submitted to and installed from [nf-core/modules](https://github.com/nf-core/modules) in order to make them available to all nf-core pipelines, and to everyone within the Nextflow community!
@@ -25,6 +25,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 On release, automated continuous integration tests run the pipeline on a full-sized dataset on the AWS cloud infrastructure. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from the full-sized test can be viewed on the [nf-core website](https://nf-co.re/demultiplex/results).
 
 ## Pipeline summary
+
 Reduced representation bisulfite sequencing (RRBS) is a method to study DNA methylation on a genome-wide scale at
 single-nucleotide resolution. RRBS is a variation of whole genome bisulfite conversion sequencing that uses restriction
 enzyme digestion and DNA size selection to focus the analysis on a subset of the genome where the majority of the DNA
@@ -44,31 +45,31 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
 8. Bismark methylation extractor ([`bismark`](https://github.com/FelixKrueger/Bismark/))
 9. Bisulphite conversion assessment
 10. Post alignment QC
-## Alma/slurm specific instructions
 
-3. Download the pipeline:
+## slurm specific instructions
+
+1. Download the pipeline:
 
     ```console
     git clone https://github.com/chelauk/nf-core-demultiplex-methylation.git
     ```
 
+2. Edit your .bashrc file to set the following variables:
 
-4. Edit your .bashrc file to set the following variables:
-
-   <pre><lang ="bash"><code>
+   ```bash
    # Set all the Singularity cache dirs to Scratch
-   export SINGULARITY_CACHEDIR=<b>/your/selected/scratch/folder/singularity_imgs</b>
+   export SINGULARITY_CACHEDIR=**/your/selected/scratch/folder/singularity_imgs**
    export SINGULARITY_TMPDIR=$SINGULARITY_CACHEDIR/tmp
    export SINGULARITY_LOCALCACHEDIR=$SINGULARITY_CACHEDIR/localcache
    export SINGULARITY_PULLFOLDER=$SINGULARITY_CACHEDIR/pull
    # match the NXF_SINGULARITY_CACHEDIR
-   export NXF_SINGULARITY_CACHEDIR=<b>/your/selected/scratch/folder/singularity_imgs</b>
-   </code></pre>
- 
-5. Start running your own analysis
+   export NXF_SINGULARITY_CACHEDIR=**/your/selected/scratch/folder/singularity_imgs**
+   ```
+
+3. Start running your own analysis
    edit a sbatch script
 
-    <pre><lang ="bash"><code>
+    ```bash
     #!/bin/bash -l
     #SBATCH --job-name=demultiplex
     #SBATCH --output=nextflow_out.txt
@@ -76,13 +77,13 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
     #SBATCH --ntasks=1
     #SBATCH --time=120:00:00
 
-    nextflow run <b>/location/of/your/nextflow_pipelines/nf-core-demultiplex-methylation</b> \
-		--input input.csv  \
-		-profile slurm,singularity \
-		-resume
-    </code></pre>
+    nextflow run **/location/of/your/nextflow_pipelines/nf-core-demultiplex-methylation** \
+    --input input.csv  \
+    -profile slurm,singularity \
+    -resume
+    ```
 
-6. Start your sbatch job:
+4. Start your sbatch job:
 
    ```console
    sbatch runNextflow.sh

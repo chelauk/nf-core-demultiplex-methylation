@@ -2,15 +2,17 @@
 // Read QC, UMI extraction and trimming
 //
 
-include { BISMARK_ALIGN    }                      from '../../modules/nf-core/modules/bismark/align/main'
-include { BISMARK_ALIGN as BISMARK_METHYLATED }   from '../../modules/nf-core/modules/bismark/align/main'
-include { BISMARK_ALIGN as BISMARK_UNMETHYLATED } from '../../modules/nf-core/modules/bismark/align/main'
-include { SAMTOOLS_INDEX }                        from '../../modules/nf-core/modules/samtools/index/main'
-include { SAMTOOLS_INDEX as INDEX_METHYLATED }    from '../../modules/nf-core/modules/samtools/index/main'
-include { SAMTOOLS_INDEX as INDEX_UNMETHYLATED }  from '../../modules/nf-core/modules/samtools/index/main'
-include { BISMARK_METHYLATIONEXTRACTOR }          from '../../modules/nf-core/modules/bismark/methylationextractor/main'
+include { BISMARK_ALIGN    }                      from '../../modules/nf-core/bismark/align/main'
+include { BISMARK_ALIGN as BISMARK_METHYLATED }   from '../../modules/nf-core/bismark/align/main'
+include { BISMARK_ALIGN as BISMARK_UNMETHYLATED } from '../../modules/nf-core/bismark/align/main'
+include { SAMTOOLS_INDEX }                        from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_INDEX as INDEX_METHYLATED }    from '../../modules/nf-core/samtools/index/main'
+include { SAMTOOLS_INDEX as INDEX_UNMETHYLATED }  from '../../modules/nf-core/samtools/index/main'
+include { BISMARK_METHYLATIONEXTRACTOR }          from '../../modules/nf-core/bismark/methylationextractor/main'
 include { BISMARK_CONVERSION }                    from '../../modules/local/bs_conversion/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS as CDSV }   from '../../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+include { FILTER_BISMARK_MX }                     from '../../modules/local/filter_bismark_methylation_extractor/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS as CDSV }   from '../../modules/nf-core/custom/dumpsoftwareversions/main'
+
 
 workflow METHYLATION {
     take:
@@ -18,6 +20,7 @@ workflow METHYLATION {
     bismark_refdir       // path: bismark reference
     methylated_control   // path: methylated control
     unmethylated_control // path: unmethylated control
+    target_bed           // path: target bed file or empty channel
 
 
     main:
@@ -67,16 +70,46 @@ workflow METHYLATION {
     chh_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chh_ot
     chg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.chg_ot
     cpg_ot   = BISMARK_METHYLATIONEXTRACTOR.out.cpg_ot
+    bedgraph = BISMARK_METHYLATIONEXTRACTOR.out.bedgraph
+    coverage = BISMARK_METHYLATIONEXTRACTOR.out.coverage
 
     //
     // module: BISULPHITE CONVERSION
     //
-    BISMARK_CONVERSION (chh_ob,
-                        chg_ob,
-                        cpg_ob,
-                        chh_ot,
-                        chg_ot,
-                        cpg_ot)
+
+    if (params.target_bed) {
+        FILTER_BISMARK_MX ( chh_ob,
+                            chg_ob,
+                            cpg_ob,
+                            chh_ot,
+                            chg_ot,
+                            cpg_ot,
+                            bedgraph,
+                            coverage,
+                            target_bed)
+
+        chh_ob_f = FILTER_BISMARK_MX.out.chh_ob
+        chg_ob_f = FILTER_BISMARK_MX.out.chg_ob
+        cpg_ob_f = FILTER_BISMARK_MX.out.cpg_ob
+        chh_ot_f = FILTER_BISMARK_MX.out.chh_ot
+        chg_ot_f = FILTER_BISMARK_MX.out.chg_ot
+        cpg_ot_f = FILTER_BISMARK_MX.out.cpg_ot
+
+         BISMARK_CONVERSION(chh_ob_f,
+                            chg_ob_f,
+                            cpg_ob_f,
+                            chh_ot_f,
+                            chg_ot_f,
+                            cpg_ot_f)
+        } else {
+            BISMARK_CONVERSION (chh_ob,
+                                chg_ob,
+                                cpg_ob,
+                                chh_ot,
+                                chg_ot,
+                                cpg_ot)
+        }
+
 
 //    CDSV (ch_versions.unique().collectFile(name: 'collated_versions.yml'))
 

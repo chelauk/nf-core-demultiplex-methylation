@@ -36,6 +36,10 @@ fasta                 = params.fasta                 ? Channel.fromPath(params.f
 bismark_refdir        = params.bismark_refdir        ? Channel.fromPath(params.bismark_refdir).collect()        : Channel.empty()
 methylated_control    = params.methylated_control    ? Channel.fromPath(params.methylated_control).collect()    : Channel.value([])
 unmethylated_control  = params.unmethylated_control  ? Channel.fromPath(params.unmethylated_control).collect()  : Channel.value([])
+target_bed            = params.target_bed            ? Channel.fromPath(params.target_bed).collect()            : Channel.empty()
+ch_input_sample       = extract_csv(file(params.input, checkIfExists: true ))
+
+
 /*
 ========================================================================================
     IMPORT LOCAL MODULES/SUBWORKFLOWS
@@ -57,9 +61,9 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 // MODULE: Installed directly from nf-core/modules
 //
 
-include { MULTIQC                     } from '../modules/nf-core/modules/multiqc/main'
-include { CAT_FASTQ                   } from '../modules/nf-core/modules/cat/fastq/main'
-include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/modules/custom/dumpsoftwareversions/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
+include { CAT_FASTQ                   } from '../modules/nf-core/cat/fastq/main'
+include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
 
 //
 // SUBWORKFLOW: Installed from subworkflow
@@ -77,29 +81,22 @@ include { METHYLATION                 } from '../subworkflows/local/methylation.
 def multiqc_report = []
 
 workflow DEMULTIPLEX {
+    ch_versions = Channel.empty()       
 
-    ch_versions = Channel.empty()
-
-    //
-    // SUBWORKFLOW: Read in samplesheet, validate and stage input files
-    //
-    INPUT_CHECK (ch_input)
-    .reads
-    .map {
-        meta, fastq ->
-            meta.id = meta.id.split('_')[0..-2].join('_')
-            [ meta, fastq ] }
-    .groupTuple(by: [0])
-    .branch {
-        meta, fastq ->
-            single  : fastq.size() == 1
-                return [ meta, fastq.flatten() ]
-            multiple: fastq.size() > 1
-                return [ meta, fastq.flatten() ]
-    }
-    .set { ch_fastq }
-    ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
-
+    ch_input_sample
+        .map{ meta, fastq_1, fastq_2 ->
+                meta.id = meta.patient + "_" + meta.sample
+                [ meta, fastq_1, fastq_2] }         
+        .groupTuple(by: [0])
+        .branch {
+            meta, fastq_1, fastq_2->
+                single  : fastq_1.size() == 1
+                    return [ meta, [ fastq_1.flatten(), fastq_2.flatten() ].flatten() ]
+                multiple: fastq_1.size() > 1
+                    return [ meta, [ fastq_1.flatten(), fastq_2.flatten() ].flatten() ]
+        }
+        .set { ch_fastq }
+        
     //
     // MODULE: Concatenate FastQ files from same sample if required
     //
@@ -114,7 +111,6 @@ workflow DEMULTIPLEX {
     //
     // SUBWORKFLOW: QC and prepare reads for alignment
     //
-
     PREP_SAMPLES (
         ch_cat_fastq,
         params.skip_fastqc || params.skip_qc,
@@ -127,13 +123,12 @@ workflow DEMULTIPLEX {
     //
     // run Methylation analysis
     //
-//	prepped_reads.view()
-	bismark_refdir.view()
 
     METHYLATION (prepped_reads,
                 bismark_refdir,
                 methylated_control,
-                unmethylated_control
+                unmethylated_control,
+                target_bed
                 )
 
     ch_versions = ch_versions.mix(METHYLATION.out.versions)
@@ -169,6 +164,61 @@ workflow DEMULTIPLEX {
     ch_versions    = ch_versions.mix(MULTIQC.out.versions)
 
 }
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+// Function to extract information (meta data + file(s)) from csv file(s)
+def extract_csv(csv_file) {
+    // check file is not empty
+    file(csv_file).withReader('UTF-8') { reader ->
+        if (reader.readLine() == null) {
+            log.error "CSV file is empty"
+            return null
+        }
+    }
+    // read csv file
+    Channel.of(csv_file).splitCsv(header: true)
+    .map { row ->
+        if (!(row.patient && row.sample)) log.warn "Missing or unknown field in csv file header"
+        [[row.patient.toString(), row.sample.toString()], row]
+    }
+    .groupTuple()
+    .map { meta, rows ->
+        size = rows.size()
+        [rows, size]
+        }.transpose()
+          //A Transpose Function takes a collection of columns and returns a collection of rows.
+          //The first row consists of the first element from each column. Successive rows are constructed similarly.
+          //def result = [['a', 'b'], [1, 2], [3, 4]].transpose()
+          //assert result == [['a', 1, 3], ['b', 2, 4]]
+            .map{
+            row, num_lanes ->
+            def meta = [:]
+            if (row.patient) meta.patient = row.patient.toString()
+            if (row.sample)  meta.sample  = row.sample.toString()
+            if (row.sex)  meta.sex  = row.sex.toString()
+                else meta.sex = "NA"
+            if (row.status)  meta.status  = row.status.toString()
+                else meta.status = 0
+            if (row.fastq_1) {
+                meta.patient  = row.patient.toString()
+                meta.sample   = row.sample.toString()
+                def fastq_1 = file(row.fastq_1, checkIfExists: true)
+                def fastq_2 = file(row.fastq_2, checkIfExists: true)
+                //Don't use a random element for ID, it breaks resuming
+                meta.data_type   = "fastq"
+                return [meta, fastq_1, fastq_2]
+                }
+            }
+            
+    }
+
+
+
+
 
 /*
 ========================================================================================
