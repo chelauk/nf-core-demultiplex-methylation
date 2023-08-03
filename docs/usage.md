@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This pipeline runs an optional demultiplex followed by the bismark pipeline for analysis of RRBS
+This pipeline runs an optional demultiplex followed by the bismark pipeline for analysis of methylseq
 
 ```mermaid
 flowchart TD
