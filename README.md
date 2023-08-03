@@ -33,7 +33,7 @@ This pipeline will process methylseq data including RRBS.
 6. Align to fully methylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
 7. Align to unmethylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
 8. Bismark methylation extractor ([`bismark`](https://github.com/FelixKrueger/Bismark/))
-9. optional: filter Bismark methylation extractor output
+9. optional: filter Bismark methylation extractor output using a bed file
 10. Bisulphite conversion assessment
 11. Post alignment QC
 
