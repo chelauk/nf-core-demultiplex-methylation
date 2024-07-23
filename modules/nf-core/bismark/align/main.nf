@@ -29,7 +29,8 @@ process BISMARK_ALIGN {
         --unmapped \\
         $fastq \\
         --basename ${prefix} \\
-        --genome $index
+        --genome $index \\
+        ${args}
     
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

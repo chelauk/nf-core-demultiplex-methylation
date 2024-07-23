@@ -25,7 +25,7 @@ process BISMARK_CONVERSION {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    bs_conversion_assessment.R ${prefix}
+    ${args} ${prefix}
     """
     stub:
     def args = task.ext.args ?: ''
