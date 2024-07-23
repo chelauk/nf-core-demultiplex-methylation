@@ -1,4 +1,4 @@
-# ![nf-core/demultiplex](docs/images/nf-core-demultiplex_logo_light.png#gh-light-mode-only) ![nf-core/demultiplex](docs/images/nf-core-demultiplex_logo_dark.png#gh-dark-mode-only)
+# ![nf-core/demultiplex-methylation](docs/images/nf-core-demultiplex_logo_light.png#gh-light-mode-only) ![nf-core/demultiplex](docs/images/nf-core-demultiplex_logo_dark.png#gh-dark-mode-only)
 
 [![GitHub Actions CI Status](https://github.com/nf-core/demultiplex/workflows/nf-core%20CI/badge.svg)](https://github.com/nf-core/demultiplex/actions?query=workflow%3A%22nf-core+CI%22)
 [![GitHub Actions Linting Status](https://github.com/nf-core/demultiplex/workflows/nf-core%20linting/badge.svg)](https://github.com/nf-core/demultiplex/actions?query=workflow%3A%22nf-core+linting%22)
@@ -21,19 +21,9 @@ fastq files run bismark against a human reference and pUC19 methylated and unmet
 
 The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool to run tasks across multiple compute infrastructures in a very portable manner. It uses Docker/Singularity containers making installation trivial and results highly reproducible. The [Nextflow DSL2](https://www.nextflow.io/docs/latest/dsl2.html) implementation of this pipeline uses one container per process which makes it much easier to maintain and update software dependencies. Where possible, these processes have been submitted to and installed from [nf-core/modules](https://github.com/nf-core/modules) in order to make them available to all nf-core pipelines, and to everyone within the Nextflow community!
 
-<!-- TODO nf-core: Add full-sized test dataset and amend the paragraph below if applicable -->
-On release, automated continuous integration tests run the pipeline on a full-sized dataset on the AWS cloud infrastructure. This ensures that the pipeline runs on AWS, has sensible resource allocation defaults set to run on real-world datasets, and permits the persistent storage of results to benchmark between pipeline releases and other analysis sources. The results obtained from the full-sized test can be viewed on the [nf-core website](https://nf-co.re/demultiplex/results).
-
 ## Pipeline summary
 
-Reduced representation bisulfite sequencing (RRBS) is a method to study DNA methylation on a genome-wide scale at
-single-nucleotide resolution. RRBS is a variation of whole genome bisulfite conversion sequencing that uses restriction
-enzyme digestion and DNA size selection to focus the analysis on a subset of the genome where the majority of the DNA
-methylation occurs. Focusing on this portion of the genome generates a genome-wide DNA methylation data set at a lower DNA
-sequencing cost than WGBS.
-
-The principle of RRBS is to focus coverage on the regions of the genome containing CpG dinucleotides, which are the primary
-sites of DNA methylation, instead of the whole genome, to reduce sequencing requirements and cost.
+This pipeline will process methylseq data including RRBS.
 
 1. Demultiplex if necessary ([`Demultiplex`](https://github.com/GaitiLab/scRRBS_pipeline/blob/main/splitFastqPair.pl))
 2. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))
@@ -43,8 +33,9 @@ sites of DNA methylation, instead of the whole genome, to reduce sequencing requ
 6. Align to fully methylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
 7. Align to unmethylated control with BISMARK ([`bismark`](https://github.com/FelixKrueger/Bismark/))
 8. Bismark methylation extractor ([`bismark`](https://github.com/FelixKrueger/Bismark/))
-9. Bisulphite conversion assessment
-10. Post alignment QC
+9. optional: filter Bismark methylation extractor output using a bed file
+10. Bisulphite conversion assessment
+11. Post alignment QC
 
 ## slurm specific instructions
 
